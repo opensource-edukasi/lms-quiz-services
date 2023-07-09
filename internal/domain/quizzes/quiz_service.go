@@ -13,5 +13,12 @@ type QuizService struct {
 }
 
 func (a *QuizService) Update(ctx context.Context, in *quizPb.QuizUpdateInput) (*quizPb.Quiz, error) {
-	return &quizPb.Quiz{}, nil
+	var quizRepo QuizRepository
+	quizRepo.pb = quizPb.Quiz{
+		Id:          in.Id,
+		Description: in.Description,
+		Name:        in.Name,
+		EndDate:     in.EndDate,
+	}
+	return &quizRepo.pb, nil
 }

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package quizzes;
+
+option go_package = "lms-quiz-services/pb/quizzes;quizzes";
+
+message QuizUpdateInput {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string end_date = 4;
+}

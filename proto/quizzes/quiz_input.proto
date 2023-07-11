@@ -3,9 +3,12 @@ package quizzes;
 
 option go_package = "lms-quiz-services/pb/quizzes;quizzes";
 
+import "quizzes/question_input.proto";
+
 message QuizUpdateInput {
   string id = 1;
   string name = 2;
   string description = 3;
   string end_date = 4;
+  repeated QuestionUpdateInput question = 5;
 }

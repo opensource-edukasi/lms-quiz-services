@@ -14,7 +14,14 @@ type QuizService struct {
 
 func (a *QuizService) Update(ctx context.Context, in *quizPb.QuizUpdateInput) (*quizPb.Quiz, error) {
 	var quizRepo QuizRepository
-	quizRepo.db = a.Db
+	var err error
+	quizRepo.tx, err = a.Db.BeginTx(ctx, nil)
+	if err != nil {
+		return &quizRepo.pb, err
+	}
+
+	// TODO: validate quizInput
+
 	quizRepo.pb = quizPb.Quiz{
 		Id:          in.Id,
 		Description: in.Description,
@@ -22,6 +29,35 @@ func (a *QuizService) Update(ctx context.Context, in *quizPb.QuizUpdateInput) (*
 		EndDate:     in.EndDate,
 	}
 
-	err := quizRepo.Update(ctx)
-	return &quizRepo.pb, err
+	for _, questionInput := range in.Question {
+		// TODO: validate questionInput
+		question := &quizPb.Question{
+			Id:          questionInput.Id,
+			Title:       questionInput.Title,
+			Description: questionInput.Description,
+			StorageId:   questionInput.StorageId,
+			AnswerId:    questionInput.AnswerId,
+		}
+
+		for _, opt := range questionInput.Option {
+			// TODO: validate optionInput
+			question.Option = append(question.Option, &quizPb.Option{
+				Id:          opt.Id,
+				Description: opt.Description,
+				StorageId:   opt.StorageId,
+			})
+		}
+
+		quizRepo.pb.Question = append(quizRepo.pb.Question, question)
+	}
+
+	err = quizRepo.Update(ctx)
+
+	if err != nil {
+		return &quizRepo.pb, err
+	}
+
+	quizRepo.tx.Commit()
+
+	return &quizRepo.pb, nil
 }

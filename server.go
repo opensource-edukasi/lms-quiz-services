@@ -7,10 +7,12 @@ import (
 	"os"
 	"time"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 
 	"lms-quiz-services/internal/config"
+	"lms-quiz-services/internal/middleware"
 	"lms-quiz-services/internal/pkg/db/postgres"
 	"lms-quiz-services/internal/pkg/db/redis"
 	"lms-quiz-services/internal/route"
@@ -56,7 +58,17 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	authInterceptor := middleware.Context{}
+	serverOptions := []grpc.ServerOption{
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			authInterceptor.Unary(),
+		)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			authInterceptor.Stream(),
+		)),
+	}
+
+	grpcServer := grpc.NewServer(serverOptions...)
 
 	// routing grpc services
 	route.GrpcRoute(grpcServer, db, log, cache)

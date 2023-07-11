@@ -17,7 +17,7 @@ var migrations = []darwin.Migration{
 		Description: "Create quizzes Table",
 		Script: `
 			CREATE TABLE quizzes (
-				id uuid NOT NULL PRIMARY KEY,
+				id uuid NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4 (),
 				subject_class_id uuid NOT NULL,
 				topic_subject_id uuid NOT NULL,
 				name varchar(45) NOT NULL,
@@ -34,7 +34,7 @@ var migrations = []darwin.Migration{
 		Description: "Create questions Table",
 		Script: `
 			CREATE TABLE questions (
-				id uuid NOT NULL PRIMARY KEY,
+				id uuid NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4 (),
 				quiz_id uuid NOT NULL,
 				title varchar(45) NOT NULL,
 				description varchar(255) NOT NULL,
@@ -42,7 +42,8 @@ var migrations = []darwin.Migration{
 				answer_id uuid,
 				created_at timestamptz NOT NULL DEFAULT timezone('utc', NOW()),
 				updated_at timestamp NOT NULL DEFAULT timezone('utc', NOW()),
-				updated_by uuid 
+				updated_by uuid,
+				CONSTRAINT fk_questions_to_quizzes FOREIGN KEY(quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE 
 			);
 		`,
 	},
@@ -51,14 +52,15 @@ var migrations = []darwin.Migration{
 		Description: "Create options Table",
 		Script: `
 			CREATE TABLE options (
-				id uuid NOT NULL PRIMARY KEY,
+				id uuid NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4 (),
 				question_id uuid NOT NULL,
 				description varchar(255) NOT NULL,
 				storage_id uuid,
 				answer_id uuid,
 				created_at timestamptz NOT NULL DEFAULT timezone('utc', NOW()),
 				updated_at timestamp NOT NULL DEFAULT timezone('utc', NOW()),
-				updated_by uuid 
+				updated_by uuid,
+				CONSTRAINT fk_options_to_questions FOREIGN KEY(question_id) REFERENCES questions(id) ON DELETE CASCADE 
 			);
 		`,
 	},

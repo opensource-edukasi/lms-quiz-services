@@ -56,7 +56,6 @@ var migrations = []darwin.Migration{
 				question_id uuid NOT NULL,
 				description varchar(255) NOT NULL,
 				storage_id uuid,
-				answer_id uuid,
 				created_at timestamptz NOT NULL DEFAULT timezone('utc', NOW()),
 				updated_at timestamp NOT NULL DEFAULT timezone('utc', NOW()),
 				updated_by uuid,

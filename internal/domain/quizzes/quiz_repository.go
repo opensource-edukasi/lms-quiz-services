@@ -140,13 +140,25 @@ func (a *QuizRepository) InsertQuestion(ctx context.Context, question *quizPb.Qu
 	}
 	defer stmt.Close()
 
+	var storageId sql.NullString
+	if len(question.StorageId) > 0 {
+		storageId.String = question.StorageId
+		storageId.Valid = true
+	}
+
+	var answerId sql.NullString
+	if len(question.AnswerId) > 0 {
+		answerId.String = question.AnswerId
+		answerId.Valid = true
+	}
+
 	question.UpdatedBy = ctx.Value(app.Ctx("user_id")).(string)
 	err = stmt.QueryRowContext(ctx,
 		a.pb.Id,
 		question.Title,
 		question.Description,
-		question.StorageId,
-		question.AnswerId,
+		storageId,
+		answerId,
 		question.UpdatedBy,
 	).Scan(&question.Id, &question.UpdatedAt, &question.CreatedAt)
 	if err != nil {
@@ -166,7 +178,7 @@ func (a *QuizRepository) InsertQuestion(ctx context.Context, question *quizPb.Qu
 func (a *QuizRepository) UpdateQuestion(ctx context.Context, question *quizPb.Question) error {
 
 	query := `
-		UPDATE question SET
+		UPDATE questions SET
 			title = $1,
 			description = $2,
 			storage_id = $3,
@@ -187,14 +199,26 @@ func (a *QuizRepository) UpdateQuestion(ctx context.Context, question *quizPb.Qu
 	question.UpdatedBy = ctx.Value(app.Ctx("user_id")).(string)
 	question.UpdatedAt = now.String()
 
+	var storageId sql.NullString
+	if len(question.StorageId) > 0 {
+		storageId.String = question.StorageId
+		storageId.Valid = true
+	}
+
+	var answerId sql.NullString
+	if len(question.AnswerId) > 0 {
+		answerId.String = question.AnswerId
+		answerId.Valid = true
+	}
+
 	err = stmt.QueryRowContext(ctx,
 		question.Title,
 		question.Description,
-		question.StorageId,
-		question.AnswerId,
-		question.Id,
+		storageId,
+		answerId,
 		question.UpdatedBy,
-		question.UpdatedAt,
+		now,
+		question.Id,
 	).Scan(&question.CreatedAt)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Exec update question: %v", err)
@@ -309,11 +333,16 @@ func (a *QuizRepository) InsertOption(ctx context.Context, option *quizPb.Option
 	defer stmt.Close()
 
 	option.UpdatedBy = ctx.Value(app.Ctx("user_id")).(string)
+	var storageId sql.NullString
+	if len(option.StorageId) > 0 {
+		storageId.String = option.StorageId
+		storageId.Valid = true
+	}
 
 	err = stmt.QueryRowContext(ctx,
 		quistionId,
 		option.Description,
-		option.StorageId,
+		storageId,
 		option.UpdatedBy,
 	).Scan(&option.Id, &option.UpdatedAt, &option.CreatedAt)
 	if err != nil {
@@ -327,7 +356,7 @@ func (a *QuizRepository) InsertOption(ctx context.Context, option *quizPb.Option
 func (a *QuizRepository) UpdateOption(ctx context.Context, option *quizPb.Option) error {
 
 	query := `
-		UPDATE option SET
+		UPDATE options SET
 			description = $1,
 			storage_id = $2,
 			updated_by = $3,
@@ -345,10 +374,17 @@ func (a *QuizRepository) UpdateOption(ctx context.Context, option *quizPb.Option
 	now := time.Now().UTC()
 	option.UpdatedBy = ctx.Value(app.Ctx("user_id")).(string)
 	option.UpdatedAt = now.String()
+	var storageId sql.NullString
+	if len(option.StorageId) > 0 {
+		storageId.String = option.StorageId
+		storageId.Valid = true
+	}
 
 	err = stmt.QueryRowContext(ctx,
 		option.Description,
-		option.StorageId,
+		storageId,
+		option.UpdatedBy,
+		now,
 		option.Id,
 	).Scan(&option.CreatedAt)
 	if err != nil {

@@ -1,0 +1,19 @@
+syntax = "proto3";
+package quizzes;
+
+option go_package = "lms-quiz-services/pb/quizzes;quizzes";
+
+import "quizzes/question_message.proto";
+
+message Quiz {
+  string id = 1;
+  string subject_class_id = 2;
+  string topic_subject_id = 3;
+  string name = 4;
+  string description = 5;
+  string end_date = 6;
+  string created_at = 7;
+  string updated_at = 8;
+  string updated_by = 9;
+  repeated Question question = 10;
+}

@@ -1,0 +1,15 @@
+syntax = "proto3";
+package quizzes;
+
+option go_package = "lms-quiz-services/pb/quizzes;quizzes";
+
+import "quizzes/option_input.proto";
+
+message QuestionUpdateInput {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string storage_id = 4;
+  string answer_id = 5;
+  repeated OptionUpdateInput option = 6;
+}

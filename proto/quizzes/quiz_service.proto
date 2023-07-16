@@ -1,0 +1,11 @@
+syntax = "proto3";
+package quizzes;
+
+option go_package = "lms-quiz-services/pb/quizzes;quizzes";
+
+import "quizzes/quiz_message.proto";
+import "quizzes/quiz_input.proto";
+
+service Quizzes {
+  rpc Update(QuizUpdateInput) returns (Quiz) {}
+}

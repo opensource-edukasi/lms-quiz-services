@@ -3,6 +3,7 @@ package quizzes
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"lms-quiz-services/internal/pkg/app"
 	"lms-quiz-services/internal/pkg/array"
 	quizPb "lms-quiz-services/pb/quizzes"
@@ -81,14 +82,14 @@ func (a *QuizRepository) Update(ctx context.Context) error {
 }
 
 func (a *QuizRepository) deleteQuestions(ctx context.Context, ids []string) error {
-	query := "DELETE FROM questions WHERE id IN (" + array.ConvertToWhereIn(ids) + ")"
+	query := fmt.Sprintf("DELETE FROM questions WHERE id IN (%s)", array.ConvertToWhereIn(1, ids))
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Prepare statement deleteQuestions: %v", err)
 	}
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(ctx, array.ConvertToAny(ids))
+	_, err = stmt.ExecContext(ctx, array.ConvertToAny(ids)...)
 	if err != nil {
 		return status.Errorf(codes.Internal, "exec context deleteQuestions: %v", err)
 	}
@@ -273,14 +274,13 @@ func (a *QuizRepository) DeleteQuestion(ctx context.Context, id string) error {
 }
 
 func (a *QuizRepository) deleteOptions(ctx context.Context, ids []string) error {
-	query := "DELETE FROM options WHERE id IN (" + array.ConvertToWhereIn(ids) + ")"
+	query := fmt.Sprintf("DELETE FROM options WHERE id IN (%s)", array.ConvertToWhereIn(1, ids))
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Prepare statement deleteOptions: %v", err)
 	}
 	defer stmt.Close()
-
-	_, err = stmt.ExecContext(ctx, array.ConvertToAny(ids))
+	_, err = stmt.ExecContext(ctx, array.ConvertToAny(ids)...)
 	if err != nil {
 		return status.Errorf(codes.Internal, "exec context deleteOptions: %v", err)
 	}

@@ -17,3 +17,11 @@ message Quiz {
   string updated_by = 9;
   repeated Question question = 10;
 }
+
+message QuizAnswer {
+  Quiz quiz = 1;
+  string student_id = 2;
+  int32 score = 3;
+  string created_at = 4;
+  repeated QuestionAnswer question_answer = 5;
+}

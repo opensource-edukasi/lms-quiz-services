@@ -13,3 +13,8 @@ message QuestionUpdateInput {
   string answer_id = 5;
   repeated OptionUpdateInput option = 6;
 }
+
+message QuestionAnswerInput {
+  string question_id = 1;
+  string answer_id = 2;
+}

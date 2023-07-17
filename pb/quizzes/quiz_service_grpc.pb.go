@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QuizzesClient interface {
 	Update(ctx context.Context, in *QuizUpdateInput, opts ...grpc.CallOption) (*Quiz, error)
-	Amswer(ctx context.Context, in *QuizAnswerInput, opts ...grpc.CallOption) (*QuizAnswer, error)
+	Answer(ctx context.Context, in *QuizAnswerInput, opts ...grpc.CallOption) (*QuizAnswer, error)
 }
 
 type quizzesClient struct {
@@ -43,9 +43,9 @@ func (c *quizzesClient) Update(ctx context.Context, in *QuizUpdateInput, opts ..
 	return out, nil
 }
 
-func (c *quizzesClient) Amswer(ctx context.Context, in *QuizAnswerInput, opts ...grpc.CallOption) (*QuizAnswer, error) {
+func (c *quizzesClient) Answer(ctx context.Context, in *QuizAnswerInput, opts ...grpc.CallOption) (*QuizAnswer, error) {
 	out := new(QuizAnswer)
-	err := c.cc.Invoke(ctx, "/quizzes.Quizzes/Amswer", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/quizzes.Quizzes/Answer", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (c *quizzesClient) Amswer(ctx context.Context, in *QuizAnswerInput, opts ..
 // for forward compatibility
 type QuizzesServer interface {
 	Update(context.Context, *QuizUpdateInput) (*Quiz, error)
-	Amswer(context.Context, *QuizAnswerInput) (*QuizAnswer, error)
+	Answer(context.Context, *QuizAnswerInput) (*QuizAnswer, error)
 }
 
 // UnimplementedQuizzesServer should be embedded to have forward compatible implementations.
@@ -67,8 +67,8 @@ type UnimplementedQuizzesServer struct {
 func (UnimplementedQuizzesServer) Update(context.Context, *QuizUpdateInput) (*Quiz, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
-func (UnimplementedQuizzesServer) Amswer(context.Context, *QuizAnswerInput) (*QuizAnswer, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Amswer not implemented")
+func (UnimplementedQuizzesServer) Answer(context.Context, *QuizAnswerInput) (*QuizAnswer, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Answer not implemented")
 }
 
 // UnsafeQuizzesServer may be embedded to opt out of forward compatibility for this service.
@@ -100,20 +100,20 @@ func _Quizzes_Update_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Quizzes_Amswer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Quizzes_Answer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QuizAnswerInput)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QuizzesServer).Amswer(ctx, in)
+		return srv.(QuizzesServer).Answer(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/quizzes.Quizzes/Amswer",
+		FullMethod: "/quizzes.Quizzes/Answer",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QuizzesServer).Amswer(ctx, req.(*QuizAnswerInput))
+		return srv.(QuizzesServer).Answer(ctx, req.(*QuizAnswerInput))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -130,8 +130,8 @@ var Quizzes_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Quizzes_Update_Handler,
 		},
 		{
-			MethodName: "Amswer",
-			Handler:    _Quizzes_Amswer_Handler,
+			MethodName: "Answer",
+			Handler:    _Quizzes_Answer_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -8,5 +8,5 @@ import "quizzes/quiz_input.proto";
 
 service Quizzes {
   rpc Update(QuizUpdateInput) returns (Quiz) {}
-  rpc Amswer(QuizAnswerInput) returns (QuizAnswer) {}
+  rpc Answer(QuizAnswerInput) returns (QuizAnswer) {}
 }

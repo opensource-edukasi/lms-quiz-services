@@ -61,3 +61,7 @@ func (a *QuizService) Update(ctx context.Context, in *quizPb.QuizUpdateInput) (*
 
 	return &quizRepo.pb, nil
 }
+
+func (a *QuizService) Answer(ctx context.Context, in *quizPb.QuizAnswerInput) (*quizPb.QuizAnswer, error) {
+	return nil, nil
+}

@@ -63,6 +63,37 @@ var migrations = []darwin.Migration{
 			);
 		`,
 	},
+	{
+		Version:     5,
+		Description: "Create student_quizzes Table",
+		Script: `
+			CREATE TABLE student_quizzes (
+				id uuid NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4 (),
+				quiz_id uuid NOT NULL,
+				student_id uuid NOT NULL,
+				score smallint NOT NULL,
+				created_at timestamptz NOT NULL DEFAULT timezone('utc', NOW()),
+				UNIQUE(quiz_id, student_id),
+				CONSTRAINT fk_student_quizzes_to_quizzes FOREIGN KEY(quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE
+			);
+		`,
+	},
+	{
+		Version:     6,
+		Description: "Create student_answer_quizzes Table",
+		Script: `
+			CREATE TABLE student_answer_quizzes (
+				id uuid NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4 (),
+				student_quiz_id uuid NOT NULL,
+				question_id uuid NOT NULL,
+				answer_id uuid,
+				is_correct boolean NOT NULL DEFAULT false,
+				created_at timestamptz NOT NULL DEFAULT timezone('utc', NOW()),
+				UNIQUE(student_quiz_id, question_id),
+				CONSTRAINT fk_student_answer_quizzes_to_student_quizzes FOREIGN KEY(student_quiz_id) REFERENCES student_quizzes(id) ON DELETE CASCADE
+			);
+		`,
+	},
 }
 
 // Migrate attempts to bring the schema for db up to date with the migrations

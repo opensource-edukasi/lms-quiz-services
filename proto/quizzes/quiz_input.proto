@@ -12,3 +12,8 @@ message QuizUpdateInput {
   string end_date = 4;
   repeated QuestionUpdateInput question = 5;
 }
+
+message QuizAnswerInput {
+  string quiz_id = 1;
+  repeated QuestionAnswerInput  question_answer = 2;
+}

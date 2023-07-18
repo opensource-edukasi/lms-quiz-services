@@ -61,3 +61,50 @@ func (a *QuizService) Update(ctx context.Context, in *quizPb.QuizUpdateInput) (*
 
 	return &quizRepo.pb, nil
 }
+
+func (a *QuizService) Answer(ctx context.Context, in *quizPb.QuizAnswerInput) (*quizPb.QuizAnswer, error) {
+	var quizRepo QuizRepository
+	var err error
+
+	// TODO: validasi apakah user yang login mengambil kelas pada quiz ini
+
+	// TODO: validate quizAnswerInput
+	quizRepo.pbAnswer = quizPb.QuizAnswer{
+		Quiz: &quizPb.Quiz{Id: in.QuizId},
+	}
+
+	for _, questionAnswerInput := range in.QuestionAnswer {
+		// TODO: validate questionAnswerInput
+		questionAnswer := &quizPb.QuestionAnswer{
+			Question: &quizPb.Question{Id: questionAnswerInput.QuestionId},
+			AnswerId: questionAnswerInput.AnswerId,
+		}
+
+		quizRepo.pbAnswer.QuestionAnswer = append(quizRepo.pbAnswer.QuestionAnswer, questionAnswer)
+	}
+
+	quizRepo.pb.Id = quizRepo.pbAnswer.Quiz.Id
+
+	quizRepo.tx, err = a.Db.BeginTx(ctx, nil)
+	if err != nil {
+		return &quizRepo.pbAnswer, err
+	}
+
+	err = quizRepo.FindQuizById(ctx)
+	if err != nil {
+		return &quizRepo.pbAnswer, err
+	}
+	quizRepo.pbAnswer.Quiz = &quizRepo.pb
+
+	quizRepo.CalculateScore()
+
+	err = quizRepo.Answer(ctx)
+
+	if err != nil {
+		return &quizRepo.pbAnswer, err
+	}
+
+	quizRepo.tx.Commit()
+
+	return &quizRepo.pbAnswer, nil
+}

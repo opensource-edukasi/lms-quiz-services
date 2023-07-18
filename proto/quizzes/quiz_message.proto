@@ -19,9 +19,10 @@ message Quiz {
 }
 
 message QuizAnswer {
-  Quiz quiz = 1;
-  string student_id = 2;
-  int32 score = 3;
-  string created_at = 4;
-  repeated QuestionAnswer question_answer = 5;
+  string id = 1;
+  Quiz quiz = 2;
+  string student_id = 3;
+  int32 score = 4;
+  string created_at = 5;
+  repeated QuestionAnswer question_answer = 6;
 }

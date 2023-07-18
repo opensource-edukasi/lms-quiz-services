@@ -3,6 +3,7 @@ package quizzes
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"lms-quiz-services/internal/pkg/app"
 	"lms-quiz-services/internal/pkg/array"
@@ -14,9 +15,10 @@ import (
 )
 
 type QuizRepository struct {
-	db *sql.DB
-	tx *sql.Tx
-	pb quizPb.Quiz
+	db       *sql.DB
+	tx       *sql.Tx
+	pb       quizPb.Quiz
+	pbAnswer quizPb.QuizAnswer
 }
 
 func (a *QuizRepository) Update(ctx context.Context) error {
@@ -412,4 +414,194 @@ func (a *QuizRepository) DeleteOption(ctx context.Context, id string) error {
 
 	return nil
 
+}
+
+func (a *QuizRepository) FindQuizById(ctx context.Context) error {
+	query := `
+		SELECT id, subject_class_id, topic_subject_id, name, description, end_date, updated_at, updated_by, created_at
+	 	FROM quizzes WHERE id = $1
+	`
+	stmt, err := a.tx.PrepareContext(ctx, query)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Prepare statement FindQuizById: %v", err)
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRowContext(ctx, a.pb.Id).Scan(
+		&a.pb.Id,
+		&a.pb.SubjectClassId,
+		&a.pb.TopicSubjectId,
+		&a.pb.Name,
+		&a.pb.Description,
+		&a.pb.EndDate,
+		&a.pb.UpdatedAt,
+		&a.pb.UpdatedBy,
+		&a.pb.CreatedAt,
+	)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Query Row Context FindQuizById: %v", err)
+	}
+
+	err = a.GetQuestionByQuizId(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
+	query := `
+		SELECT questions.id, questions.title, questions.description, questions.storage_id, 
+			questions.answer_id, questions.updated_at, questions.updated_by, questions.created_at,
+			json_agg(DISTINCT jsonb_build_object(
+				'id', options.id,
+				'description', options.description,
+				'storage_id', options.storage_id,
+				'updated_at', options.updated_at,
+				'updated_by', options.updated_by,
+				'created_at', options.created_at
+			)) as question_options	 	
+		FROM questions JOIN options ON (questions.id = options.question_id) 
+		WHERE questions.quiz_id = $1
+		GROUP BY questions.id
+	`
+	stmt, err := a.tx.PrepareContext(ctx, query)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Prepare statement GetQuestionByQuizId: %v", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, a.pb.Id)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Query Context GetQuestionByQuizId: %v", err)
+	}
+
+	for rows.Next() {
+		var question quizPb.Question
+		var options string
+		err := rows.Scan(
+			&question.Id,
+			&question.Title,
+			&question.Description,
+			&question.StorageId,
+			&question.AnswerId,
+			&question.UpdatedAt,
+			&question.UpdatedBy,
+			&question.CreatedAt,
+			&options,
+		)
+		if err != nil {
+			return status.Errorf(codes.Internal, "Scan GetQuestionByQuizId: %v", err)
+		}
+
+		optionStruct := []struct {
+			Id          string
+			Description string
+			StorageId   string
+			UpdatedAt   string
+			UpdatedBy   string
+			CreatedAt   string
+		}{}
+		err = json.Unmarshal([]byte(options), &optionStruct)
+		if err != nil {
+			return status.Errorf(codes.Internal, "unmarshal option GetQuestionByQuizId: %v", err)
+		}
+
+		for _, option := range optionStruct {
+			question.Option = append(question.Option, &quizPb.Option{
+				Id:          option.Id,
+				Description: option.Description,
+				StorageId:   option.StorageId,
+				CreatedAt:   option.CreatedAt,
+				UpdatedAt:   option.UpdatedAt,
+				UpdatedBy:   option.UpdatedBy,
+			})
+		}
+
+		a.pb.Question = append(a.pb.Question, &question)
+	}
+
+	if rows.Err() != nil {
+		return status.Errorf(codes.Internal, "rows error on  GetQuestionByQuizId: %v", err)
+	}
+
+	return nil
+}
+
+func (a *QuizRepository) CalculateScore() {
+	score := 0
+	for _, question := range a.pb.Question {
+		for _, answer := range a.pbAnswer.QuestionAnswer {
+			if question.Id == answer.Question.Id {
+				answer.Question = question
+				if question.AnswerId == answer.AnswerId {
+					score += 1
+					answer.IsCorrect = true
+				}
+			}
+		}
+	}
+
+	a.pbAnswer.Score = int32(score)
+	return
+}
+
+func (a *QuizRepository) Answer(ctx context.Context) error {
+	a.pbAnswer.StudentId = ctx.Value(app.Ctx("user_id")).(string)
+	query := `
+		INSERT INTO student_quizzes (quiz_id, student_id, score) VALUES ($1, $2, $3)
+		RETURNING id, created_at
+		`
+
+	stmt, err := a.tx.PrepareContext(ctx, query)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Prepare statement answer quiz: %v", err)
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRowContext(ctx,
+		a.pbAnswer.Quiz.Id,
+		a.pbAnswer.StudentId,
+		a.pbAnswer.Score,
+	).Scan(&a.pbAnswer.Id, &a.pbAnswer.CreatedAt)
+
+	if err != nil {
+		return status.Errorf(codes.Internal, "Exec answer quiz: %v", err)
+	}
+
+	for _, questionAnswer := range a.pbAnswer.QuestionAnswer {
+		if err := a.InsertQuestionAnswer(ctx, questionAnswer); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (a *QuizRepository) InsertQuestionAnswer(ctx context.Context, questionAnswer *quizPb.QuestionAnswer) error {
+	query := `
+		INSERT INTO student_answer_quizzes (student_quiz_id, question_id, answer_id, is_correct) 
+		VALUES ($1, $2, $3, $4)
+		RETURNING created_at
+		`
+
+	stmt, err := a.tx.PrepareContext(ctx, query)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Prepare statement InsertQuestionAnswer : %v", err)
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRowContext(ctx,
+		a.pbAnswer.Id,
+		questionAnswer.Question.Id,
+		questionAnswer.AnswerId,
+		questionAnswer.IsCorrect,
+	).Scan(&a.pbAnswer.CreatedAt)
+
+	if err != nil {
+		return status.Errorf(codes.Internal, "Exec answer quiz: %v", err)
+	}
+
+	return nil
 }

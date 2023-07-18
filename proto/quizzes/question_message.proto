@@ -18,8 +18,9 @@ message Question {
 }
 
 message QuestionAnswer {
-  Question question = 1;
-  string answer_id = 2;
-  bool is_correct = 3;
-  string created_at = 4;
+  string id = 1;
+  Question question = 2;
+  string answer_id = 3;
+  bool is_correct = 4;
+  string created_at = 5;
 }

@@ -605,3 +605,79 @@ func (a *QuizRepository) InsertQuestionAnswer(ctx context.Context, questionAnswe
 
 	return nil
 }
+
+type QuizResult struct {
+	QuizName  string
+	Score     int
+	MaxScore  int
+	Questions []struct {
+		Title       string
+		Description string
+		Options     []struct {
+			Description string
+			IsCorrect   bool
+		}
+	}
+}
+
+func (a *QuizRepository) GetQuizResult(ctx context.Context, studentID, quizID string) (*QuizResult, error) {
+	query := `
+        SELECT quizzes.name, sq.score, 
+        SUM(CASE WHEN saq.is_correct THEN 1 ELSE 0 END) as max_score,
+        json_agg(
+            json_build_object(
+                'title', questions.title,
+                'description', questions.description,
+                'options', json_agg(
+                    json_build_object(
+                        'description', options.description,
+                        'is_correct', saq.is_correct
+                    )
+                )
+            )
+        ) as questions
+        FROM quizzes
+        JOIN student_quizzes sq ON quizzes.id = sq.quiz_id
+        JOIN student_answer_quizzes saq ON sq.id = saq.student_quiz_id
+        JOIN questions ON saq.question_id = questions.id
+        JOIN options ON saq.answer_id = options.id
+        WHERE sq.student_id = $1 AND sq.quiz_id = $2
+        GROUP BY quizzes.name, sq.score
+    `
+
+	stmt, err := a.tx.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Prepare statement GetQuizResult: %v", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, studentID, quizID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Query Context GetQuizResult: %v", err)
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		return nil, status.Errorf(codes.NotFound, "Data hasil kuis tidak ditemukan")
+	}
+
+	var result QuizResult
+	var questionsJSON string
+
+	err = rows.Scan(
+		&result.QuizName,
+		&result.Score,
+		&result.MaxScore,
+		&questionsJSON,
+	)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Scan GetQuizResult: %v", err)
+	}
+
+	err = json.Unmarshal([]byte(questionsJSON), &result.Questions)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unmarshal GetQuizResult: %v", err)
+	}
+
+	return &result, nil
+}

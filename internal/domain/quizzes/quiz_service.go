@@ -108,3 +108,35 @@ func (a *QuizService) Answer(ctx context.Context, in *quizPb.QuizAnswerInput) (*
 
 	return &quizRepo.pbAnswer, nil
 }
+
+func (a *QuizService) GetAnswer(ctx context.Context, in *genericPb.Id) (*quizPb.QuizAnswer, error) {
+	// Panggil fungsi di repository yang kamu buat untuk mendapatkan hasil kuis berdasarkan ID
+	// Misalnya, a.QuizRepo.GetQuizResult(ctx, studentID, quizID)
+	result, err := a.QuizRepo.GetQuizResult(ctx, in.Id) // Ganti in.Id dengan ID yang sesuai
+	if err != nil {
+		return nil, err
+	}
+
+	// Konversi hasil dari QuizResult menjadi QuizAnswer
+	quizAnswer := &quizPb.QuizAnswer{
+		Quiz: &quizPb.Quiz{
+			Id: result.QuizName, // Atau sesuai dengan ID yang sesuai
+			// Assign nilai-nilai lainnya dari result ke sini
+		},
+		Score:         result.Score,
+		QuestionAnswer: make([]*quizPb.QuestionAnswer, len(result.Questions)),
+	}
+
+	for i, questionAnswer := range result.Questions {
+		quizAnswer.QuestionAnswer[i] = &quizPb.QuestionAnswer{
+			Question: &quizPb.Question{
+				Id:          questionAnswer.Question.Id,
+				// Assign nilai-nilai lainnya dari questionAnswer.Question ke sini
+			},
+			AnswerId:  questionAnswer.AnswerId,
+			IsCorrect: questionAnswer.IsCorrect,
+		}
+	}
+
+	return quizAnswer, nil
+}

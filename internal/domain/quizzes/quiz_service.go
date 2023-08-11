@@ -109,7 +109,6 @@ func (a *QuizService) Answer(ctx context.Context, in *quizPb.QuizAnswerInput) (*
 	return &quizRepo.pbAnswer, nil
 }
 
-// ViewResultQuiz retrieves the quiz result for a specific student and quiz.
 func (a *QuizService) ViewResultQuiz(ctx context.Context, studentID, quizID string) (*quizPb.QuizResult, error) {
 	var quizRepo QuizRepository
 	var err error
@@ -118,12 +117,8 @@ func (a *QuizService) ViewResultQuiz(ctx context.Context, studentID, quizID stri
 	if err != nil {
 		return nil, err
 	}
-	defer quizRepo.tx.Rollback() // Rollback the transaction if an error occurs
-
-	// TODO: Validate whether the student has access to view this quiz result
-	// ...
-
-	// Retrieve the quiz result using the QuizRepository's method
+	defer quizRepo.tx.Rollback() 
+	
 	quizResult, err := quizRepo.GetQuizResult(ctx, studentID, quizID)
 	if err != nil {
 		return nil, err

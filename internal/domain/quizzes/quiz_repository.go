@@ -608,16 +608,20 @@ func (a *QuizRepository) InsertQuestionAnswer(ctx context.Context, questionAnswe
 
 type QuizResult struct {
 	QuizName  string
-	Score     int
-	MaxScore  int
-	Questions []struct {
-		Title       string
-		Description string
-		Options     []struct {
-			Description string
-			IsCorrect   bool
-		}
-	}
+	Score     int32
+	MaxScore  int32
+	Questions []QuestionResult
+}
+
+type QuestionResult struct {
+	Title       string
+	Description string
+	Options     []OptionResult
+}
+
+type OptionResult struct {
+	Description string
+	IsCorrect   bool
 }
 
 func (a *QuizRepository) GetQuizResult(ctx context.Context, studentID, quizID string) (*QuizResult, error) {
@@ -644,6 +648,7 @@ func (a *QuizRepository) GetQuizResult(ctx context.Context, studentID, quizID st
         WHERE sq.student_id = $1 AND sq.quiz_id = $2
         GROUP BY quizzes.name, sq.score
     `
+	studentID = ctx.Value(app.Ctx("user_id")).(string)
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {

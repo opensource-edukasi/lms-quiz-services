@@ -109,33 +109,25 @@ func (a *QuizService) Answer(ctx context.Context, in *quizPb.QuizAnswerInput) (*
 	return &quizRepo.pbAnswer, nil
 }
 
-func (a *QuizService) GetAnswer(ctx context.Context, in *genericPb.Id) (*quizPb.QuizAnswer, error) {
-	
-	result, err := a.QuizRepo.GetQuizResult(ctx, in.Id) // Ganti in.Id dengan ID yang sesuai
+// ViewResultQuiz retrieves the quiz result for a specific student and quiz.
+func (a *QuizService) ViewResultQuiz(ctx context.Context, studentID, quizID string) (*quizPb.QuizResult, error) {
+	var quizRepo QuizRepository
+	var err error
+
+	quizRepo.tx, err = a.Db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer quizRepo.tx.Rollback() // Rollback the transaction if an error occurs
+
+	// TODO: Validate whether the student has access to view this quiz result
+	// ...
+
+	// Retrieve the quiz result using the QuizRepository's method
+	quizResult, err := quizRepo.GetQuizResult(ctx, studentID, quizID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Konversi hasil dari QuizResult menjadi QuizAnswer
-	quizAnswer := &quizPb.QuizAnswer{
-		Quiz: &quizPb.Quiz{
-			Id: result.QuizName, // Atau sesuai dengan ID yang sesuai
-			
-		},
-		Score:         result.Score,
-		QuestionAnswer: make([]*quizPb.QuestionAnswer, len(result.Questions)),
-	}
-
-	for i, questionAnswer := range result.Questions {
-		quizAnswer.QuestionAnswer[i] = &quizPb.QuestionAnswer{
-			Question: &quizPb.Question{
-				Id:          questionAnswer.Question.Id,
-				
-			},
-			AnswerId:  questionAnswer.AnswerId,
-			IsCorrect: questionAnswer.IsCorrect,
-		}
-	}
-
-	return quizAnswer, nil
+	return &quizResult, nil
 }

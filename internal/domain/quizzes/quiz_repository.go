@@ -606,83 +606,28 @@ func (a *QuizRepository) InsertQuestionAnswer(ctx context.Context, questionAnswe
 	return nil
 }
 
-type QuizResult struct {
-	QuizName  string
-	Score     int32
-	MaxScore  int32
-	Questions []QuestionResult
-}
-
-type QuestionResult struct {
-	Title       string
-	Description string
-	Options     []OptionResult
-}
-
-type OptionResult struct {
-	Description string
-	IsCorrect   bool
-}
-
-func (a *QuizRepository) GetQuizResult(ctx context.Context, studentID, quizID string) (*QuizResult, error) {
-	query := `
-        SELECT quizzes.name, sq.score, 
-        SUM(CASE WHEN saq.is_correct THEN 1 ELSE 0 END) as max_score,
-        json_agg(
-            json_build_object(
-                'title', questions.title,
-                'description', questions.description,
-                'options', json_agg(
-                    json_build_object(
-                        'description', options.description,
-                        'is_correct', saq.is_correct
-                    )
-                )
-            )
-        ) as questions
-        FROM quizzes
-        JOIN student_quizzes sq ON quizzes.id = sq.quiz_id
-        JOIN student_answer_quizzes saq ON sq.id = saq.student_quiz_id
-        JOIN questions ON saq.question_id = questions.id
-        JOIN options ON saq.answer_id = options.id
-        WHERE sq.student_id = $1 AND sq.quiz_id = $2
-        GROUP BY quizzes.name, sq.score
-    `
-	studentID = ctx.Value(app.Ctx("user_id")).(string)
-
-	stmt, err := a.tx.PrepareContext(ctx, query)
+func (a *QuizRepository) GetQuizResult(ctx context.Context, studentID, quizID string) (*quizPb.QuizAnswer, error) {
+	var quiz quizPb.Quiz
+	err := a.tx.QueryRowContext(ctx, `
+		SELECT * FROM quizzes WHERE id = $1
+	`, quizID).Scan(&quiz.Id, &quiz.Name, &quiz.Description, &quiz.CreatedAt)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Prepare statement GetQuizResult: %v", err)
+		return nil, status.Errorf(codes.Internal, "Get quiz: %v", err)
 	}
-	defer stmt.Close()
-
-	rows, err := stmt.QueryContext(ctx, studentID, quizID)
+	var questions []quizPb.Question
+	err = a.tx.SelectContext(ctx, &questions, `
+		SELECT * FROM questions WHERE quiz_id = $1
+	`, quizID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Query Context GetQuizResult: %v", err)
+		return nil, status.Errorf(codes.Internal, "Get questions: %v", err)
 	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, status.Errorf(codes.NotFound, "Data hasil kuis tidak ditemukan")
-	}
-
-	var result QuizResult
-	var questionsJSON string
-
-	err = rows.Scan(
-		&result.QuizName,
-		&result.Score,
-		&result.MaxScore,
-		&questionsJSON,
-	)
+	var answers []quizPb.QuestionAnswer
+	err = a.tx.SelectContext(ctx, &answers, `
+		SELECT * FROM student_answer_quizzes WHERE student_quiz_id = (
+			SELECT id FROM student_quizzes WHERE student_id = $1 AND quiz_id = $2
+		)
+	`, studentID, quizID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Scan GetQuizResult: %v", err)
+		return nil, status.Errorf(codes.Internal, "Get answers: %v", err)
 	}
-
-	err = json.Unmarshal([]byte(questionsJSON), &result.Questions)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Unmarshal GetQuizResult: %v", err)
-	}
-
-	return &result, nil
-}
+	var score  int32

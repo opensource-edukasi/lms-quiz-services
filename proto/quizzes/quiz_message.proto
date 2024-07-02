@@ -1,7 +1,7 @@
 syntax = "proto3";
 package quizzes;
 
-option go_package = "lms-quiz-services/pb/quizzes;quizzes";
+option go_package = "pb/quizzes;quizzes";
 
 import "quizzes/question_message.proto";
 

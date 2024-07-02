@@ -1,7 +1,7 @@
 syntax = "proto3";
-package lms_quiz_services;
+package quizzes;
 
-option go_package = "lms_quiz_services/pb/generic;generic";
+option go_package = "pb/quizzes;quizzes";
 
 message EmptyMessage {}
 message Id {

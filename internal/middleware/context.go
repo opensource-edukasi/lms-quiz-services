@@ -11,6 +11,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type wrappedStream struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+// Context method to override the context
+func (w *wrappedStream) Context() context.Context {
+	return w.ctx
+}
+
 type Context struct{}
 
 // Unary interceptor
@@ -40,12 +50,17 @@ func (a *Context) Stream() grpc.StreamServerInterceptor {
 		info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler,
 	) error {
-		_, err := a.context(stream.Context())
+		ctx, err := a.context(stream.Context())
 		if err != nil {
 			return err
 		}
 
-		return handler(srv, stream)
+		wrappedStream := &wrappedStream{
+			ServerStream: stream,
+			ctx:          ctx,
+		}
+
+		return handler(srv, wrappedStream)
 	}
 }
 

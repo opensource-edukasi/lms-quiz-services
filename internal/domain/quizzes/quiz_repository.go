@@ -132,7 +132,7 @@ func (a *QuizRepository) getExtQuestions(ctx context.Context) ([]string, error) 
 func (a *QuizRepository) InsertQuestion(ctx context.Context, question *quizPb.Question) error {
 
 	query := `
-		INSERT INTO question (quiz_id, title, description, storage_id, answer_id, updated_by)
+		INSERT INTO questions (quiz_id, title, description, storage_id, answer_id, updated_by)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, updated_at, created_at
 		`
@@ -601,6 +601,44 @@ func (a *QuizRepository) InsertQuestionAnswer(ctx context.Context, questionAnswe
 
 	if err != nil {
 		return status.Errorf(codes.Internal, "Exec answer quiz: %v", err)
+	}
+
+	return nil
+}
+
+func (a *QuizRepository) Create(ctx context.Context) error {
+	query := `
+		INSERT INTO quizzes (subject_class_id, topic_subject_id, name, description, end_date, updated_by)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id, created_at, updated_at, updated_by
+	`
+
+	stmt, err := a.tx.PrepareContext(ctx, query)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Prepare statement create quiz: %v", err)
+	}
+	defer stmt.Close()
+
+	a.pb.UpdatedBy = ctx.Value(app.Ctx("user_id")).(string)
+
+	err = stmt.QueryRowContext(ctx,
+		a.pb.SubjectClassId,
+		a.pb.TopicSubjectId,
+		a.pb.Name,
+		a.pb.Description,
+		a.pb.EndDate,
+		a.pb.UpdatedBy,
+	).Scan(&a.pb.Id, &a.pb.CreatedAt, &a.pb.UpdatedAt, &a.pb.UpdatedBy)
+
+	if err != nil {
+		fmt.Println("Error inserting quiz")
+		return status.Errorf(codes.Internal, "Exec create quiz: %v", err)
+	}
+
+	for _, question := range a.pb.Question {
+		if err := a.InsertQuestion(ctx, question); err != nil {
+			return err
+		}
 	}
 
 	return nil

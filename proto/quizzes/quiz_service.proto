@@ -11,4 +11,5 @@ service Quizzes {
   rpc Update(QuizUpdateInput) returns (Quiz) {}
   rpc Answer(QuizAnswerInput) returns (QuizAnswer) {}
   rpc Get(Id) returns (Quiz){}
+  rpc Create(QuizCreateInput) returns (Quiz) {}
 }

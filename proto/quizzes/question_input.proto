@@ -18,3 +18,10 @@ message QuestionAnswerInput {
   string question_id = 1;
   string answer_id = 2;
 }
+
+message QuestionCreateInput {
+  string title = 1;
+  string description = 2;
+  string storage_id = 3;
+  repeated OptionCreateInput option = 5;
+}

@@ -454,25 +454,49 @@ func (a *QuizRepository) FindQuizById(ctx context.Context) error {
 
 func (a *QuizRepository) GetResultViewQuizByQuizIdAndStudentId(ctx context.Context) error {
     query := `
-        SELECT 
-            sq.id AS student_quizzes_id,
-            q.name,
-            q.description,
-            q2.title,
-            sq.score,
-            json_agg(jsonb_build_object(
-                'student_answer_quizzes_id', saq.id,
-                'is_correct', saq.is_correct,
-                'score', saq.score
-            )) AS answers
-        FROM 
-            student_answer_quizzes saq 
-            JOIN student_quizzes sq ON saq.student_quiz_id = sq.id 
-            JOIN quizzes q ON q.id = sq.quiz_id
-            JOIN questions q2 ON q2.id = saq.question_id
-        WHERE 
-            q.id = $1 AND sq.student_id = $2
-        GROUP BY sq.id, q.name, q.description, q2.title, sq.score
+       SELECT 
+			sq.id AS student_quizzes_id, 
+			sq.student_id, 
+			q.id AS quiz_id, 
+			q.name, 
+			q.description AS quiz_description, 
+			q2.id as question_id,
+			q2.title as question_title,
+			q2.description as question_description,
+			q2.answer_id,
+			saq.is_correct ,
+			sq.score, 
+			json_agg(
+				jsonb_build_object(
+					'student_answer_quizzes_id', saq.id,
+					'question_id', q2.id,
+					'question_title', q2.title,
+					'question_description', q2.description,
+					'answer_id', q2.answer_id,
+					'is_correct', saq.is_correct,
+					'score', sq.score
+				)
+			) AS answers
+		FROM 
+			student_answer_quizzes saq 
+			JOIN student_quizzes sq ON saq.student_quiz_id = sq.id 
+			JOIN quizzes q ON q.id = sq.quiz_id
+			JOIN questions q2 ON q2.id = saq.question_id
+		WHERE 
+			q.id = '6ec52d62-123b-4b0d-bfab-e256c3c49243' 
+			AND sq.student_id = '37da7238-e78f-4c54-a354-ce9f452c7f2e'
+		GROUP BY 
+			sq.id, 
+			sq.student_id, 
+			q.id, 
+			q.name, 
+			q.description, 
+			q2.id, 
+			q2.title, 
+			q2.description, 
+			q2.answer_id, 
+			saq.id, 
+			saq.is_correct;
     `
 
     stmt, err := a.tx.PrepareContext(ctx, query)

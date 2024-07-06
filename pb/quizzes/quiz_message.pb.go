@@ -281,148 +281,6 @@ func (x *GetResultQuizInput) GetStudentId() string {
 	return ""
 }
 
-type GetResultQuizOutput struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	QuizResults []*QuizResult `protobuf:"bytes,1,rep,name=quiz_results,json=quizResults,proto3" json:"quiz_results,omitempty"`
-}
-
-func (x *GetResultQuizOutput) Reset() {
-	*x = GetResultQuizOutput{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_quizzes_quiz_message_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *GetResultQuizOutput) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetResultQuizOutput) ProtoMessage() {}
-
-func (x *GetResultQuizOutput) ProtoReflect() protoreflect.Message {
-	mi := &file_quizzes_quiz_message_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetResultQuizOutput.ProtoReflect.Descriptor instead.
-func (*GetResultQuizOutput) Descriptor() ([]byte, []int) {
-	return file_quizzes_quiz_message_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *GetResultQuizOutput) GetQuizResults() []*QuizResult {
-	if x != nil {
-		return x.QuizResults
-	}
-	return nil
-}
-
-type QuizResult struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	StudentAnswerQuizzesId string `protobuf:"bytes,1,opt,name=student_answer_quizzes_id,json=studentAnswerQuizzesId,proto3" json:"student_answer_quizzes_id,omitempty"`
-	StudentQuizzesId       string `protobuf:"bytes,2,opt,name=student_quizzes_id,json=studentQuizzesId,proto3" json:"student_quizzes_id,omitempty"`
-	Name                   string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Description            string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
-	Title                  string `protobuf:"bytes,5,opt,name=title,proto3" json:"title,omitempty"`
-	IsCorrect              bool   `protobuf:"varint,6,opt,name=is_correct,json=isCorrect,proto3" json:"is_correct,omitempty"`
-	Score                  int32  `protobuf:"varint,7,opt,name=score,proto3" json:"score,omitempty"`
-}
-
-func (x *QuizResult) Reset() {
-	*x = QuizResult{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_quizzes_quiz_message_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *QuizResult) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*QuizResult) ProtoMessage() {}
-
-func (x *QuizResult) ProtoReflect() protoreflect.Message {
-	mi := &file_quizzes_quiz_message_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use QuizResult.ProtoReflect.Descriptor instead.
-func (*QuizResult) Descriptor() ([]byte, []int) {
-	return file_quizzes_quiz_message_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *QuizResult) GetStudentAnswerQuizzesId() string {
-	if x != nil {
-		return x.StudentAnswerQuizzesId
-	}
-	return ""
-}
-
-func (x *QuizResult) GetStudentQuizzesId() string {
-	if x != nil {
-		return x.StudentQuizzesId
-	}
-	return ""
-}
-
-func (x *QuizResult) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-func (x *QuizResult) GetDescription() string {
-	if x != nil {
-		return x.Description
-	}
-	return ""
-}
-
-func (x *QuizResult) GetTitle() string {
-	if x != nil {
-		return x.Title
-	}
-	return ""
-}
-
-func (x *QuizResult) GetIsCorrect() bool {
-	if x != nil {
-		return x.IsCorrect
-	}
-	return false
-}
-
-func (x *QuizResult) GetScore() int32 {
-	if x != nil {
-		return x.Score
-	}
-	return 0
-}
-
 var File_quizzes_quiz_message_proto protoreflect.FileDescriptor
 
 var file_quizzes_quiz_message_proto_rawDesc = []byte{
@@ -469,29 +327,9 @@ var file_quizzes_quiz_message_proto_rawDesc = []byte{
 	0x07, 0x71, 0x75, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
 	0x71, 0x75, 0x69, 0x7a, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e,
 	0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x73, 0x74, 0x75, 0x64,
-	0x65, 0x6e, 0x74, 0x49, 0x64, 0x22, 0x4d, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x75,
-	0x6c, 0x74, 0x51, 0x75, 0x69, 0x7a, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x12, 0x36, 0x0a, 0x0c,
-	0x71, 0x75, 0x69, 0x7a, 0x5f, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03,
-	0x28, 0x0b, 0x32, 0x13, 0x2e, 0x71, 0x75, 0x69, 0x7a, 0x7a, 0x65, 0x73, 0x2e, 0x51, 0x75, 0x69,
-	0x7a, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x0b, 0x71, 0x75, 0x69, 0x7a, 0x52, 0x65, 0x73,
-	0x75, 0x6c, 0x74, 0x73, 0x22, 0xf6, 0x01, 0x0a, 0x0a, 0x51, 0x75, 0x69, 0x7a, 0x52, 0x65, 0x73,
-	0x75, 0x6c, 0x74, 0x12, 0x39, 0x0a, 0x19, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x5f, 0x61,
-	0x6e, 0x73, 0x77, 0x65, 0x72, 0x5f, 0x71, 0x75, 0x69, 0x7a, 0x7a, 0x65, 0x73, 0x5f, 0x69, 0x64,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x16, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x41,
-	0x6e, 0x73, 0x77, 0x65, 0x72, 0x51, 0x75, 0x69, 0x7a, 0x7a, 0x65, 0x73, 0x49, 0x64, 0x12, 0x2c,
-	0x0a, 0x12, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x5f, 0x71, 0x75, 0x69, 0x7a, 0x7a, 0x65,
-	0x73, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x73, 0x74, 0x75, 0x64,
-	0x65, 0x6e, 0x74, 0x51, 0x75, 0x69, 0x7a, 0x7a, 0x65, 0x73, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04,
-	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65,
-	0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18,
-	0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69,
-	0x6f, 0x6e, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x69, 0x73, 0x5f, 0x63,
-	0x6f, 0x72, 0x72, 0x65, 0x63, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x69, 0x73,
-	0x43, 0x6f, 0x72, 0x72, 0x65, 0x63, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x73, 0x63, 0x6f, 0x72, 0x65,
-	0x18, 0x07, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x73, 0x63, 0x6f, 0x72, 0x65, 0x42, 0x14, 0x5a,
-	0x12, 0x70, 0x62, 0x2f, 0x71, 0x75, 0x69, 0x7a, 0x7a, 0x65, 0x73, 0x3b, 0x71, 0x75, 0x69, 0x7a,
-	0x7a, 0x65, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x6e, 0x74, 0x49, 0x64, 0x42, 0x14, 0x5a, 0x12, 0x70, 0x62, 0x2f, 0x71, 0x75, 0x69, 0x7a,
+	0x7a, 0x65, 0x73, 0x3b, 0x71, 0x75, 0x69, 0x7a, 0x7a, 0x65, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -506,26 +344,23 @@ func file_quizzes_quiz_message_proto_rawDescGZIP() []byte {
 	return file_quizzes_quiz_message_proto_rawDescData
 }
 
-var file_quizzes_quiz_message_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_quizzes_quiz_message_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_quizzes_quiz_message_proto_goTypes = []any{
-	(*Quiz)(nil),                // 0: quizzes.Quiz
-	(*QuizAnswer)(nil),          // 1: quizzes.QuizAnswer
-	(*GetResultQuizInput)(nil),  // 2: quizzes.GetResultQuizInput
-	(*GetResultQuizOutput)(nil), // 3: quizzes.GetResultQuizOutput
-	(*QuizResult)(nil),          // 4: quizzes.QuizResult
-	(*Question)(nil),            // 5: quizzes.Question
-	(*QuestionAnswer)(nil),      // 6: quizzes.QuestionAnswer
+	(*Quiz)(nil),               // 0: quizzes.Quiz
+	(*QuizAnswer)(nil),         // 1: quizzes.QuizAnswer
+	(*GetResultQuizInput)(nil), // 2: quizzes.GetResultQuizInput
+	(*Question)(nil),           // 3: quizzes.Question
+	(*QuestionAnswer)(nil),     // 4: quizzes.QuestionAnswer
 }
 var file_quizzes_quiz_message_proto_depIdxs = []int32{
-	5, // 0: quizzes.Quiz.question:type_name -> quizzes.Question
+	3, // 0: quizzes.Quiz.question:type_name -> quizzes.Question
 	0, // 1: quizzes.QuizAnswer.quiz:type_name -> quizzes.Quiz
-	6, // 2: quizzes.QuizAnswer.question_answer:type_name -> quizzes.QuestionAnswer
-	4, // 3: quizzes.GetResultQuizOutput.quiz_results:type_name -> quizzes.QuizResult
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	4, // 2: quizzes.QuizAnswer.question_answer:type_name -> quizzes.QuestionAnswer
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_quizzes_quiz_message_proto_init() }
@@ -571,30 +406,6 @@ func file_quizzes_quiz_message_proto_init() {
 				return nil
 			}
 		}
-		file_quizzes_quiz_message_proto_msgTypes[3].Exporter = func(v any, i int) any {
-			switch v := v.(*GetResultQuizOutput); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_quizzes_quiz_message_proto_msgTypes[4].Exporter = func(v any, i int) any {
-			switch v := v.(*QuizResult); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -602,7 +413,7 @@ func file_quizzes_quiz_message_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_quizzes_quiz_message_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

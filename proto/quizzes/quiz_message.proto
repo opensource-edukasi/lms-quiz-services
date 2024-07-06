@@ -31,17 +31,3 @@ message GetResultQuizInput {
   string quiz_id = 1;
   string student_id = 2;
 }
-
-message GetResultQuizOutput {
-  repeated QuizResult quiz_results = 1;
-}
-
-message QuizResult {
-  string student_answer_quizzes_id = 1;
-  string student_quizzes_id = 2;
-  string name = 3;
-  string description = 4;
-  string title = 5;
-  bool is_correct = 6;
-  int32 score = 7;
-}

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"lms-quiz-services/internal/pkg/app"
 	"lms-quiz-services/internal/pkg/array"
-	"lms-quiz-services/pb/quizzes"
 	quizPb "lms-quiz-services/pb/quizzes"
 	"time"
 
@@ -452,108 +451,53 @@ func (a *QuizRepository) FindQuizById(ctx context.Context) error {
 }
 
 
-func (a *QuizRepository) GetResultViewQuizByQuizIdAndStudentId(ctx context.Context) error {
-    query := `
-       SELECT 
-			sq.id AS student_quizzes_id, 
-			sq.student_id, 
-			q.id AS quiz_id, 
-			q.name, 
-			q.description AS quiz_description, 
-			q2.id as question_id,
-			q2.title as question_title,
-			q2.description as question_description,
-			q2.answer_id,
-			saq.is_correct ,
-			sq.score, 
+func (a *QuizRepository) GetQuizAnswer(ctx context.Context) error {
+	query := `
+		SELECT sq.id, sq.score, 
 			json_agg(
-				jsonb_build_object(
-					'student_answer_quizzes_id', saq.id,
-					'question_id', q2.id,
-					'question_title', q2.title,
-					'question_description', q2.description,
-					'answer_id', q2.answer_id,
-					'is_correct', saq.is_correct,
-					'score', sq.score
-				)
-			) AS answers
-		FROM 
-			student_answer_quizzes saq 
-			JOIN student_quizzes sq ON saq.student_quiz_id = sq.id 
-			JOIN quizzes q ON q.id = sq.quiz_id
-			JOIN questions q2 ON q2.id = saq.question_id
-		WHERE 
-			q.id = '6ec52d62-123b-4b0d-bfab-e256c3c49243' 
-			AND sq.student_id = '37da7238-e78f-4c54-a354-ce9f452c7f2e'
-		GROUP BY 
-			sq.id, 
-			sq.student_id, 
-			q.id, 
-			q.name, 
-			q.description, 
-			q2.id, 
-			q2.title, 
-			q2.description, 
-			q2.answer_id, 
-			saq.id, 
-			saq.is_correct;
-    `
-
-    stmt, err := a.tx.PrepareContext(ctx, query)
+					jsonb_build_object(
+						
+						'question_id', saq.question_id,
+						'is_correct', saq.is_correct
+					)
+				) AS answers
+		FROM student_quizzes sq
+		JOIN student_answer_quizzes saq ON saq.student_quiz_id = sq.id 
+		WHERE sq.quiz_id = $1 AND sq.student_id = $2
+		GROUP BY sq.id`
+		
+	stmt, err := a.db.PrepareContext(ctx, query)
     if err != nil {
         return status.Errorf(codes.Internal, "Prepare statement: %v", err)
     }
     defer stmt.Close()
 
-    rows, err := stmt.QueryContext(ctx, a.quizId, a.studentId)
-    if err != nil {
-        return status.Errorf(codes.Internal, "Query context: %v", err)
-    }
-    defer rows.Close()
+	var jsonStr string
+	err = stmt.QueryRowContext(ctx, a.pbAnswer.Quiz.Id, a.pbAnswer.StudentId).Scan(&a.pbAnswer.Id, &a.pbAnswer.Score, &jsonStr)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Query Row Context: %v", err)
+	}
 
-    for rows.Next() {
-        var result quizzes.QuizResult
-        var answers string
-        err := rows.Scan(
-            &result.StudentQuizzesId,
-            &result.Name,
-            &result.Description,
-            &result.Title,
-            &result.Score,
-            &answers,
-        )
-        if err != nil {
-            return status.Errorf(codes.Internal, "Scan row: %v", err)
-        }
+	var answer []struct {
+		IsCorrect bool `json:"is_correct"`
+		QuestionId string `json:"question_id"`
+	}
 
-        var answerStructs []struct {
-            StudentAnswerQuizzesId string `json:"student_answer_quizzes_id"`
-            IsCorrect              bool   `json:"is_correct"`
-            Score                  int32  `json:"score"`
-        }
-        err = json.Unmarshal([]byte(answers), &answerStructs)
-        if err != nil {
-            return status.Errorf(codes.Internal, "Unmarshal answers: %v", err)
-        }
+	err = json.Unmarshal([]byte(jsonStr), &answer)
 
-        for _, answerStruct := range answerStructs {
-            result.QuizResults = append(result.QuizResults, &quizzes.QuizResult{
-                StudentAnswerQuizzesId: answerStruct.StudentAnswerQuizzesId,
-                IsCorrect:              answerStruct.IsCorrect,
-                Score:                  answerStruct.Score,
-            })
-        }
+	if err != nil {
+		return status.Errorf(codes.Internal, "Unmarshal answers: %v", err)
+	}
 
-        a.results = append(a.results, &result)
-    }
+	for _, v := range answer {
+		a.pbAnswer.QuestionAnswer = append(a.pbAnswer.QuestionAnswer, &quizPb.QuestionAnswer{
+			Question: &quizPb.Question{Id:v.QuestionId},
+			IsCorrect: v.IsCorrect,
+		})
+	}
 
-    if rows.Err() != nil {
-        return status.Errorf(codes.Internal, "Rows error: %v", rows.Err())
-    }
-
-    return nil
+	return nil
 }
-
 
 func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 	query := `

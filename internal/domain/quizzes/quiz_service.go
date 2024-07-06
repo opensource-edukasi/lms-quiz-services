@@ -4,11 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"lms-quiz-services/internal/pkg/db/redis"
-	"lms-quiz-services/pb/quizzes"
 	quizPb "lms-quiz-services/pb/quizzes"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type QuizService struct {
@@ -17,38 +13,22 @@ type QuizService struct {
 }
 
 
-func (a *QuizService) GetResultQuiz(ctx context.Context, in *quizzes.GetResultQuizInput) (*quizzes.GetResultQuizOutput, error) {
+func (a *QuizService) GetResultQuiz(ctx context.Context, in *quizPb.GetResultQuizInput) (*quizPb.QuizAnswer, error) {
     var quizRepo QuizRepository
     var err error
 
     quizRepo.db = a.Db
-    quizRepo.quizId = in.QuizId
-    quizRepo.studentId = in.StudentId
+	quizRepo.pbAnswer=quizPb.QuizAnswer{
+		StudentId: 	in.StudentId,
+		Quiz: 		&quizPb.Quiz{Id:in.QuizId},
+	}
 
-    quizRepo.tx, err = a.Db.BeginTx(ctx, nil)
+    err = quizRepo.GetQuizAnswer(ctx)
     if err != nil {
-        return nil, status.Errorf(codes.Internal, "Begin transaction: %v", err)
-    }
-
-    err = quizRepo.GetResultViewQuizByQuizIdAndStudentId(ctx)
-    if err != nil {
-        quizRepo.tx.Rollback()
         return nil, err
     }
-    err = quizRepo.tx.Commit()
-    if err != nil {
-        return nil, status.Errorf(codes.Internal, "Commit transaction: %v", err)
-    }
 
-    quizResults := make([]*quizzes.QuizResult, len(quizRepo.results))
-    for i, result := range quizRepo.results {
-        quizResults[i] = result
-    }
-    output := &quizzes.GetResultQuizOutput{
-        QuizResults: quizResults,
-    }
-
-    return output, nil
+    return &quizRepo.pbAnswer, nil
 }
 
 

@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	Quizzes_Update_FullMethodName = "/quizzes.Quizzes/Update"
-	Quizzes_Answer_FullMethodName = "/quizzes.Quizzes/Answer"
-	Quizzes_Get_FullMethodName    = "/quizzes.Quizzes/Get"
+	Quizzes_Update_FullMethodName        = "/quizzes.Quizzes/Update"
+	Quizzes_Answer_FullMethodName        = "/quizzes.Quizzes/Answer"
+	Quizzes_Get_FullMethodName           = "/quizzes.Quizzes/Get"
+	Quizzes_GetResultQuiz_FullMethodName = "/quizzes.Quizzes/GetResultQuiz"
 )
 
 // QuizzesClient is the client API for Quizzes service.
@@ -31,6 +32,7 @@ type QuizzesClient interface {
 	Update(ctx context.Context, in *QuizUpdateInput, opts ...grpc.CallOption) (*Quiz, error)
 	Answer(ctx context.Context, in *QuizAnswerInput, opts ...grpc.CallOption) (*QuizAnswer, error)
 	Get(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Quiz, error)
+	GetResultQuiz(ctx context.Context, in *GetResultQuizInput, opts ...grpc.CallOption) (*QuizAnswer, error)
 }
 
 type quizzesClient struct {
@@ -71,6 +73,16 @@ func (c *quizzesClient) Get(ctx context.Context, in *Id, opts ...grpc.CallOption
 	return out, nil
 }
 
+func (c *quizzesClient) GetResultQuiz(ctx context.Context, in *GetResultQuizInput, opts ...grpc.CallOption) (*QuizAnswer, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QuizAnswer)
+	err := c.cc.Invoke(ctx, Quizzes_GetResultQuiz_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QuizzesServer is the server API for Quizzes service.
 // All implementations should embed UnimplementedQuizzesServer
 // for forward compatibility
@@ -78,6 +90,7 @@ type QuizzesServer interface {
 	Update(context.Context, *QuizUpdateInput) (*Quiz, error)
 	Answer(context.Context, *QuizAnswerInput) (*QuizAnswer, error)
 	Get(context.Context, *Id) (*Quiz, error)
+	GetResultQuiz(context.Context, *GetResultQuizInput) (*QuizAnswer, error)
 }
 
 // UnimplementedQuizzesServer should be embedded to have forward compatible implementations.
@@ -92,6 +105,9 @@ func (UnimplementedQuizzesServer) Answer(context.Context, *QuizAnswerInput) (*Qu
 }
 func (UnimplementedQuizzesServer) Get(context.Context, *Id) (*Quiz, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedQuizzesServer) GetResultQuiz(context.Context, *GetResultQuizInput) (*QuizAnswer, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetResultQuiz not implemented")
 }
 
 // UnsafeQuizzesServer may be embedded to opt out of forward compatibility for this service.
@@ -159,6 +175,24 @@ func _Quizzes_Get_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Quizzes_GetResultQuiz_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetResultQuizInput)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QuizzesServer).GetResultQuiz(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Quizzes_GetResultQuiz_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QuizzesServer).GetResultQuiz(ctx, req.(*GetResultQuizInput))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Quizzes_ServiceDesc is the grpc.ServiceDesc for Quizzes service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -177,6 +211,10 @@ var Quizzes_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _Quizzes_Get_Handler,
+		},
+		{
+			MethodName: "GetResultQuiz",
+			Handler:    _Quizzes_GetResultQuiz_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -669,9 +669,13 @@ func (a *QuizRepository) Delete(ctx context.Context) error {
 		return status.Errorf(codes.Internal, "Exec delete quizzes: %v", err)
 	}
 
-	_, err = result.RowsAffected()
+	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return status.Errorf(codes.Internal, "Error getting rows affected: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return status.Errorf(codes.NotFound, "Quiz with ID %s not found", a.pb.Id)
 	}
 
 	return nil

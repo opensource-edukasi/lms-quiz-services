@@ -4,6 +4,7 @@ package quizzes;
 option go_package = "pb/quizzes;quizzes";
 
 message EmptyMessage {}
+
 message Id {
   string id = 1;
 }

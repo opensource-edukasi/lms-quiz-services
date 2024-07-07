@@ -12,26 +12,23 @@ type QuizService struct {
 	Cache *redis.Cache
 }
 
-
 func (a *QuizService) GetResultQuiz(ctx context.Context, in *quizPb.GetResultQuizInput) (*quizPb.QuizAnswer, error) {
-    var quizRepo QuizRepository
-    var err error
+	var quizRepo QuizRepository
+	var err error
 
-    quizRepo.db = a.Db
-	quizRepo.pbAnswer=quizPb.QuizAnswer{
-		StudentId: 	in.StudentId,
-		Quiz: 		&quizPb.Quiz{Id:in.QuizId},
+	quizRepo.db = a.Db
+	quizRepo.pbAnswer = quizPb.QuizAnswer{
+		StudentId: in.StudentId,
+		Quiz:      &quizPb.Quiz{Id: in.QuizId},
 	}
 
-    err = quizRepo.GetQuizAnswer(ctx)
-    if err != nil {
-        return nil, err
-    }
+	err = quizRepo.GetQuizAnswer(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-    return &quizRepo.pbAnswer, nil
+	return &quizRepo.pbAnswer, nil
 }
-
-
 
 func (a *QuizService) Get(ctx context.Context, in *quizPb.Id) (*quizPb.Quiz, error) {
 	var quizRepo QuizRepository
@@ -146,4 +143,19 @@ func (a *QuizService) Answer(ctx context.Context, in *quizPb.QuizAnswerInput) (*
 	quizRepo.tx.Commit()
 
 	return &quizRepo.pbAnswer, nil
+}
+
+func (a *QuizService) Delete(ctx context.Context, in *quizPb.Id) (*quizPb.BoolMessage, error) {
+	var quizRepo QuizRepository
+
+	var err error
+
+	quizRepo.pb.Id = in.Id
+	quizRepo.db = a.Db
+
+	err = quizRepo.Delete(ctx)
+	if err != nil {
+		return &quizPb.BoolMessage{IsTrue: false}, err
+	}
+	return &quizPb.BoolMessage{IsTrue: true}, nil
 }

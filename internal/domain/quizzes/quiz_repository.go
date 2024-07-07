@@ -450,7 +450,6 @@ func (a *QuizRepository) FindQuizById(ctx context.Context) error {
 	return nil
 }
 
-
 func (a *QuizRepository) GetQuizAnswer(ctx context.Context) error {
 	query := `
 		SELECT sq.id, sq.score, 
@@ -465,12 +464,12 @@ func (a *QuizRepository) GetQuizAnswer(ctx context.Context) error {
 		JOIN student_answer_quizzes saq ON saq.student_quiz_id = sq.id 
 		WHERE sq.quiz_id = $1 AND sq.student_id = $2
 		GROUP BY sq.id`
-		
+
 	stmt, err := a.db.PrepareContext(ctx, query)
-    if err != nil {
-        return status.Errorf(codes.Internal, "Prepare statement: %v", err)
-    }
-    defer stmt.Close()
+	if err != nil {
+		return status.Errorf(codes.Internal, "Prepare statement: %v", err)
+	}
+	defer stmt.Close()
 
 	var jsonStr string
 	err = stmt.QueryRowContext(ctx, a.pbAnswer.Quiz.Id, a.pbAnswer.StudentId).Scan(&a.pbAnswer.Id, &a.pbAnswer.Score, &jsonStr)
@@ -479,7 +478,7 @@ func (a *QuizRepository) GetQuizAnswer(ctx context.Context) error {
 	}
 
 	var answer []struct {
-		IsCorrect bool `json:"is_correct"`
+		IsCorrect  bool   `json:"is_correct"`
 		QuestionId string `json:"question_id"`
 	}
 
@@ -491,7 +490,7 @@ func (a *QuizRepository) GetQuizAnswer(ctx context.Context) error {
 
 	for _, v := range answer {
 		a.pbAnswer.QuestionAnswer = append(a.pbAnswer.QuestionAnswer, &quizPb.QuestionAnswer{
-			Question: &quizPb.Question{Id:v.QuestionId},
+			Question:  &quizPb.Question{Id: v.QuestionId},
 			IsCorrect: v.IsCorrect,
 		})
 	}
@@ -650,6 +649,38 @@ func (a *QuizRepository) InsertQuestionAnswer(ctx context.Context, questionAnswe
 
 	if err != nil {
 		return status.Errorf(codes.Internal, "Exec answer quiz: %v", err)
+	}
+
+	return nil
+}
+
+func (a *QuizRepository) Delete(ctx context.Context) error {
+	// Prepare the DELETE statement
+	query := `DELETE FROM quizzes WHERE id = $1`
+
+	stmt, err := a.tx.PrepareContext(ctx, query)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Prepare statement delete quizzes: %v", err)
+	}
+	defer stmt.Close()
+
+	result, err := stmt.ExecContext(ctx, a.pb.Id)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Exec delete quizzes: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error getting rows affected: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return status.Errorf(codes.NotFound, "Quiz with ID %s not found", a.pb.Id)
+	}
+
+	err = a.tx.Commit()
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error committing transaction: %v", err)
 	}
 
 	return nil

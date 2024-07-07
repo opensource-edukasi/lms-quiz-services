@@ -685,7 +685,7 @@ func (a *QuizRepository) Delete(ctx context.Context) error {
 func (a *QuizRepository) Create(ctx context.Context) error {
 	query := `
 		INSERT INTO quizzes (subject_class_id, topic_subject_id, name, description, end_date, updated_by)
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at, updated_at, updated_by
 	`
 

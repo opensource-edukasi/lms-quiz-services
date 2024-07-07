@@ -65,6 +65,12 @@ func (a *Context) Stream() grpc.StreamServerInterceptor {
 }
 
 func (a Context) context(ctx context.Context) (context.Context, error) {
+	md := metadata.New(map[string]string{
+    "user_id":          "2e898b4e-7360-4a0e-bc78-9fc23ecd33e4",
+    "university_id":    "2e898b4e-7360-4a0e-bc78-9fc23ecd33e4",
+    "program_studi_id": "2e898b4e-7360-4a0e-bc78-9fc23ecd33e4",
+  })
+  ctx = metadata.NewIncomingContext(ctx, md)
 	// Get token from incoming metadata
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {

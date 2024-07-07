@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"lms-quiz-services/internal/pkg/db/redis"
 	quizPb "lms-quiz-services/pb/quizzes"
+	"log"
 )
 
 type QuizService struct {
 	Db    *sql.DB
 	Cache *redis.Cache
+	Log	 	*log.Logger
 }
 
 func (a *QuizService) GetResultQuiz(ctx context.Context, in *quizPb.GetResultQuizInput) (*quizPb.QuizAnswer, error) {
@@ -159,9 +161,11 @@ func (a *QuizService) Delete(ctx context.Context, in *quizPb.Id) (*quizPb.BoolMe
 	}
 	return &quizPb.BoolMessage{IsTrue: true}, nil
 }
+
 func (a *QuizService) Create(ctx context.Context, in *quizPb.QuizCreateInput) (*quizPb.Quiz, error) {
 	var quizRepo QuizRepository
 	var err error
+	quizRepo.Log = a.Log
 	quizRepo.tx, err = a.Db.BeginTx(ctx, nil)
 	if err != nil {
 		return &quizRepo.pb, err
@@ -185,24 +189,24 @@ func (a *QuizService) Create(ctx context.Context, in *quizPb.QuizCreateInput) (*
 			StorageId:   questionInput.StorageId,
 		}
 	
-			for _, opt := range questionInput.Option {
-				// TODO: validate optionInput
-				question.Option = append(question.Option, &quizPb.Option{
-					Description: opt.Description,
-					StorageId:   opt.StorageId,
-				})
-			}
-	
-			quizRepo.pb.Question = append(quizRepo.pb.Question, question)
+		for _, opt := range questionInput.Option {
+			// TODO: validate optionInput
+			question.Option = append(question.Option, &quizPb.Option{
+				Description: opt.Description,
+				StorageId:   opt.StorageId,
+			})
 		}
 	
-		err = quizRepo.Create(ctx)
-	
-		if err != nil {
-			return &quizRepo.pb, err
-		}
-	
-		quizRepo.tx.Commit()
-	
-		return &quizRepo.pb, nil
+		quizRepo.pb.Question = append(quizRepo.pb.Question, question)
 	}
+
+	err = quizRepo.Create(ctx)
+
+	if err != nil {
+		return &quizRepo.pb, err
+	}
+
+	quizRepo.tx.Commit()
+
+	return &quizRepo.pb, nil
+}

@@ -8,6 +8,7 @@ import (
 	"lms-quiz-services/internal/pkg/app"
 	"lms-quiz-services/internal/pkg/array"
 	quizPb "lms-quiz-services/pb/quizzes"
+	"log"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -19,6 +20,7 @@ type QuizRepository struct {
 	tx       *sql.Tx
 	pb       quizPb.Quiz
 	pbAnswer quizPb.QuizAnswer
+	Log 		 *log.Logger
 }
 
 func (a *QuizRepository) Update(ctx context.Context) error {
@@ -683,12 +685,13 @@ func (a *QuizRepository) Delete(ctx context.Context) error {
 func (a *QuizRepository) Create(ctx context.Context) error {
 	query := `
 		INSERT INTO quizzes (subject_class_id, topic_subject_id, name, description, end_date, updated_by)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, updated_at, updated_by
 	`
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement create quiz: ", err)
 		return status.Errorf(codes.Internal, "Prepare statement create quiz: %v", err)
 	}
 	defer stmt.Close()
@@ -705,7 +708,7 @@ func (a *QuizRepository) Create(ctx context.Context) error {
 	).Scan(&a.pb.Id, &a.pb.CreatedAt, &a.pb.UpdatedAt, &a.pb.UpdatedBy)
 
 	if err != nil {
-		fmt.Println("Error inserting quiz")
+		a.Log.Println("Error inserting quiz", err)
 		return status.Errorf(codes.Internal, "Exec create quiz: %v", err)
 	}
 

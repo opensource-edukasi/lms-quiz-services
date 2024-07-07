@@ -13,6 +13,6 @@ import (
 
 // GrpcRoute func
 func GrpcRoute(grpcServer *grpc.Server, db *sql.DB, log *log.Logger, cache *redis.Cache) {
-	quizServer := quizDomain.QuizService{Db: db, Cache: cache}
+	quizServer := quizDomain.QuizService{Db: db, Cache: cache, Log: log}
 	quizPb.RegisterQuizzesServer(grpcServer, &quizServer)
 }

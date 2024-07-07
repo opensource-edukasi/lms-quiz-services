@@ -168,6 +168,7 @@ func (a *QuizService) Create(ctx context.Context, in *quizPb.QuizCreateInput) (*
 	quizRepo.Log = a.Log
 	quizRepo.tx, err = a.Db.BeginTx(ctx, nil)
 	if err != nil {
+		a.Log.Println("Error beginning DB Transactino: ", err)
 		return &quizRepo.pb, err
 	}
 

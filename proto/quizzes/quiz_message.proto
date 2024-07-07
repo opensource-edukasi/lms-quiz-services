@@ -26,3 +26,8 @@ message QuizAnswer {
   string created_at = 5;
   repeated QuestionAnswer question_answer = 6;
 }
+
+message GetResultQuizInput {
+  string quiz_id = 1;
+  string student_id = 2;
+}

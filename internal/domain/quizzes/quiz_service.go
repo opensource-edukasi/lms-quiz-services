@@ -12,6 +12,27 @@ type QuizService struct {
 	Cache *redis.Cache
 }
 
+
+func (a *QuizService) GetResultQuiz(ctx context.Context, in *quizPb.GetResultQuizInput) (*quizPb.QuizAnswer, error) {
+    var quizRepo QuizRepository
+    var err error
+
+    quizRepo.db = a.Db
+	quizRepo.pbAnswer=quizPb.QuizAnswer{
+		StudentId: 	in.StudentId,
+		Quiz: 		&quizPb.Quiz{Id:in.QuizId},
+	}
+
+    err = quizRepo.GetQuizAnswer(ctx)
+    if err != nil {
+        return nil, err
+    }
+
+    return &quizRepo.pbAnswer, nil
+}
+
+
+
 func (a *QuizService) Get(ctx context.Context, in *quizPb.Id) (*quizPb.Quiz, error) {
 	var quizRepo QuizRepository
 	var err error

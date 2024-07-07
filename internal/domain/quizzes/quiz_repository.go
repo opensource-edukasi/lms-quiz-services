@@ -450,6 +450,55 @@ func (a *QuizRepository) FindQuizById(ctx context.Context) error {
 	return nil
 }
 
+
+func (a *QuizRepository) GetQuizAnswer(ctx context.Context) error {
+	query := `
+		SELECT sq.id, sq.score, 
+			json_agg(
+					jsonb_build_object(
+						
+						'question_id', saq.question_id,
+						'is_correct', saq.is_correct
+					)
+				) AS answers
+		FROM student_quizzes sq
+		JOIN student_answer_quizzes saq ON saq.student_quiz_id = sq.id 
+		WHERE sq.quiz_id = $1 AND sq.student_id = $2
+		GROUP BY sq.id`
+		
+	stmt, err := a.db.PrepareContext(ctx, query)
+    if err != nil {
+        return status.Errorf(codes.Internal, "Prepare statement: %v", err)
+    }
+    defer stmt.Close()
+
+	var jsonStr string
+	err = stmt.QueryRowContext(ctx, a.pbAnswer.Quiz.Id, a.pbAnswer.StudentId).Scan(&a.pbAnswer.Id, &a.pbAnswer.Score, &jsonStr)
+	if err != nil {
+		return status.Errorf(codes.Internal, "Query Row Context: %v", err)
+	}
+
+	var answer []struct {
+		IsCorrect bool `json:"is_correct"`
+		QuestionId string `json:"question_id"`
+	}
+
+	err = json.Unmarshal([]byte(jsonStr), &answer)
+
+	if err != nil {
+		return status.Errorf(codes.Internal, "Unmarshal answers: %v", err)
+	}
+
+	for _, v := range answer {
+		a.pbAnswer.QuestionAnswer = append(a.pbAnswer.QuestionAnswer, &quizPb.QuestionAnswer{
+			Question: &quizPb.Question{Id:v.QuestionId},
+			IsCorrect: v.IsCorrect,
+		})
+	}
+
+	return nil
+}
+
 func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 	query := `
 		SELECT questions.id, questions.title, questions.description, questions.storage_id, 

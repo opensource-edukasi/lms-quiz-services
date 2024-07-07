@@ -658,7 +658,7 @@ func (a *QuizRepository) Delete(ctx context.Context) error {
 	// Prepare the DELETE statement
 	query := `DELETE FROM quizzes WHERE id = $1`
 
-	stmt, err := a.tx.PrepareContext(ctx, query)
+	stmt, err := a.db.PrepareContext(ctx, query)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Prepare statement delete quizzes: %v", err)
 	}
@@ -669,18 +669,9 @@ func (a *QuizRepository) Delete(ctx context.Context) error {
 		return status.Errorf(codes.Internal, "Exec delete quizzes: %v", err)
 	}
 
-	rowsAffected, err := result.RowsAffected()
+	_, err = result.RowsAffected()
 	if err != nil {
 		return status.Errorf(codes.Internal, "Error getting rows affected: %v", err)
-	}
-
-	if rowsAffected == 0 {
-		return status.Errorf(codes.NotFound, "Quiz with ID %s not found", a.pb.Id)
-	}
-
-	err = a.tx.Commit()
-	if err != nil {
-		return status.Errorf(codes.Internal, "Error committing transaction: %v", err)
 	}
 
 	return nil

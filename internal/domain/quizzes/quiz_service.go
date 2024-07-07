@@ -147,14 +147,12 @@ func (a *QuizService) Answer(ctx context.Context, in *quizPb.QuizAnswerInput) (*
 
 func (a *QuizService) Delete(ctx context.Context, in *quizPb.Id) (*quizPb.BoolMessage, error) {
 	var quizRepo QuizRepository
+
 	var err error
 
 	quizRepo.pb.Id = in.Id
+	quizRepo.db = a.Db
 
-	quizRepo.tx, err = a.Db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
 	err = quizRepo.Delete(ctx)
 	if err != nil {
 		return &quizPb.BoolMessage{IsTrue: false}, err

@@ -20,7 +20,7 @@ type QuizRepository struct {
 	tx       *sql.Tx
 	pb       quizPb.Quiz
 	pbAnswer quizPb.QuizAnswer
-	Log 		 *log.Logger
+	Log      *log.Logger
 }
 
 func (a *QuizRepository) Update(ctx context.Context) error {
@@ -529,12 +529,13 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 
 	for rows.Next() {
 		var question quizPb.Question
+		var storageId sql.NullString
 		var options string
 		err := rows.Scan(
 			&question.Id,
 			&question.Title,
 			&question.Description,
-			&question.StorageId,
+			&storageId,
 			&question.AnswerId,
 			&question.UpdatedAt,
 			&question.UpdatedBy,
@@ -545,13 +546,19 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 			return status.Errorf(codes.Internal, "Scan GetQuestionByQuizId: %v", err)
 		}
 
+		if storageId.Valid {
+			question.StorageId = storageId.String
+		} else {
+			question.StorageId = ""
+		}
+
 		optionStruct := []struct {
-			Id          string
-			Description string
-			StorageId   string
-			UpdatedAt   string
-			UpdatedBy   string
-			CreatedAt   string
+			Id          string         `json:"id"`
+			Description string         `json:"description"`
+			StorageId   sql.NullString `json:"storage_id"`
+			UpdatedAt   string         `json:"updated_at"`
+			UpdatedBy   string         `json:"updated_by"`
+			CreatedAt   string         `json:"created_at"`
 		}{}
 		err = json.Unmarshal([]byte(options), &optionStruct)
 		if err != nil {
@@ -559,10 +566,14 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 		}
 
 		for _, option := range optionStruct {
+			optionStorageId := ""
+			if option.StorageId.Valid {
+				optionStorageId = option.StorageId.String
+			}
 			question.Option = append(question.Option, &quizPb.Option{
 				Id:          option.Id,
 				Description: option.Description,
-				StorageId:   option.StorageId,
+				StorageId:   optionStorageId,
 				CreatedAt:   option.CreatedAt,
 				UpdatedAt:   option.UpdatedAt,
 				UpdatedBy:   option.UpdatedBy,
@@ -573,7 +584,7 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 	}
 
 	if rows.Err() != nil {
-		return status.Errorf(codes.Internal, "rows error on  GetQuestionByQuizId: %v", err)
+		return status.Errorf(codes.Internal, "rows error on GetQuestionByQuizId: %v", rows.Err())
 	}
 
 	return nil

@@ -427,6 +427,7 @@ func (a *QuizRepository) FindQuizById(ctx context.Context) error {
 	`
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement FindQuizzById: ", err)
 		return status.Errorf(codes.Internal, "Prepare statement FindQuizById: %v", err)
 	}
 	defer stmt.Close()
@@ -443,6 +444,7 @@ func (a *QuizRepository) FindQuizById(ctx context.Context) error {
 		&a.pb.CreatedAt,
 	)
 	if err != nil {
+		a.Log.Println("Error selecting FindQuizzById", err)
 		return status.Errorf(codes.Internal, "Query Row Context FindQuizById: %v", err)
 	}
 

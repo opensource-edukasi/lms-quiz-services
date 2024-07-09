@@ -39,6 +39,7 @@ func (a *QuizService) Get(ctx context.Context, in *quizPb.Id) (*quizPb.Quiz, err
 
 	quizRepo.tx, err = a.Db.BeginTx(ctx, nil)
 	if err != nil {
+		a.Log.Println("Error beginning DB Transaction: ", err)
 		return nil, err
 	}
 

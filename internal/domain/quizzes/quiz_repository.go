@@ -548,8 +548,6 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 
 		if storageId.Valid {
 			question.StorageId = storageId.String
-		} else {
-			question.StorageId = ""
 		}
 
 		optionStruct := []struct {

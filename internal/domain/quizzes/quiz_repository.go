@@ -473,6 +473,7 @@ func (a *QuizRepository) GetQuizAnswer(ctx context.Context) error {
 
 	stmt, err := a.db.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement GetQuizAnswer: ", err)
 		return status.Errorf(codes.Internal, "Prepare statement: %v", err)
 	}
 	defer stmt.Close()
@@ -480,6 +481,7 @@ func (a *QuizRepository) GetQuizAnswer(ctx context.Context) error {
 	var jsonStr string
 	err = stmt.QueryRowContext(ctx, a.pbAnswer.Quiz.Id, a.pbAnswer.StudentId).Scan(&a.pbAnswer.Id, &a.pbAnswer.Score, &jsonStr)
 	if err != nil {
+		a.Log.Println("Error selecting GetQuizAnswer", err)
 		return status.Errorf(codes.Internal, "Query Row Context: %v", err)
 	}
 

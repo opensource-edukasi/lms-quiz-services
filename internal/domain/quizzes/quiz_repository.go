@@ -37,6 +37,7 @@ func (a *QuizRepository) Update(ctx context.Context) error {
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement update quiz: ", err)
 		return status.Errorf(codes.Internal, "Prepare statement update quiz: %v", err)
 	}
 	defer stmt.Close()
@@ -54,6 +55,7 @@ func (a *QuizRepository) Update(ctx context.Context) error {
 	).Scan(&a.pb.SubjectClassId, &a.pb.TopicSubjectId, &a.pb.CreatedAt)
 
 	if err != nil {
+		a.Log.Println("Error update quiz", err)
 		return status.Errorf(codes.Internal, "Exec update quiz: %v", err)
 	}
 

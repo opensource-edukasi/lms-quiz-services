@@ -55,6 +55,7 @@ func (a *QuizService) Update(ctx context.Context, in *quizPb.QuizUpdateInput) (*
 	var err error
 	quizRepo.tx, err = a.Db.BeginTx(ctx, nil)
 	if err != nil {
+		a.Log.Println("Error beginning DB Transaction: ", err)
 		return &quizRepo.pb, err
 	}
 

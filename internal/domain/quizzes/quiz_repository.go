@@ -276,12 +276,14 @@ func (a *QuizRepository) DeleteQuestion(ctx context.Context, id string) error {
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement delete question")
 		return status.Errorf(codes.Internal, "Prepare statement delete question: %v", err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
+		a.Log.Println("Failed execute delete question")
 		return status.Errorf(codes.Internal, "Exec delete question: %v", err)
 	}
 

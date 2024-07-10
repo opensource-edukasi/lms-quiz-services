@@ -91,12 +91,14 @@ func (a *QuizRepository) deleteQuestions(ctx context.Context, ids []string) erro
 	query := fmt.Sprintf("DELETE FROM questions WHERE id IN (%s)", array.ConvertToWhereIn(1, ids))
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement deleteQuestions")
 		return status.Errorf(codes.Internal, "Prepare statement deleteQuestions: %v", err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, array.ConvertToAny(ids)...)
 	if err != nil {
+		a.Log.Println("Failed to execute context deleteQuestions")
 		return status.Errorf(codes.Internal, "exec context deleteQuestions: %v", err)
 	}
 

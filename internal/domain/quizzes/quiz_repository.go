@@ -110,12 +110,14 @@ func (a *QuizRepository) getExtQuestions(ctx context.Context) ([]string, error) 
 	query := `SELECT id FROM questions WHERE quiz_id = $1`
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement getExtQuestions")
 		return ids, status.Errorf(codes.Internal, "Prepare statement getExtQuestions: %v", err)
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, a.pb.Id)
 	if err != nil {
+		a.Log.Println("Failed to execute Query Context getExtQuestions")
 		return ids, status.Errorf(codes.Internal, "Query Context getExtQuestions: %v", err)
 	}
 
@@ -123,12 +125,14 @@ func (a *QuizRepository) getExtQuestions(ctx context.Context) ([]string, error) 
 		var id string
 		err = rows.Scan(&id)
 		if err != nil {
+			a.Log.Println("Failed to scan row for quiz")
 			return ids, status.Errorf(codes.Internal, "Scan getExtQuestions: %v", err)
 		}
 		ids = append(ids, id)
 	}
 
 	if rows.Err() != nil {
+		a.Log.Println("Error occurred while iterating rows for quiz")
 		return ids, status.Errorf(codes.Internal, "Rows getExtQuestions: %v", err)
 	}
 

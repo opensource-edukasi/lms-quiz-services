@@ -670,26 +670,31 @@ func (a *QuizRepository) Delete(ctx context.Context) error {
 
 	stmt, err := a.db.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement delete quizzes")
 		return status.Errorf(codes.Internal, "Prepare statement delete quizzes: %v", err)
 	}
 	defer stmt.Close()
 
 	result, err := stmt.ExecContext(ctx, a.pb.Id)
 	if err != nil {
+		a.Log.Println("Error delete quizzes", err)
 		return status.Errorf(codes.Internal, "Exec delete quizzes: %v", err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
+		a.Log.Println("Error getting rows for quiz")
 		return status.Errorf(codes.Internal, "Error getting rows affected: %v", err)
 	}
 
 	if rowsAffected == 0 {
+		a.Log.Printf("Quiz with ID %s not found", a.pb.Id)
 		return status.Errorf(codes.NotFound, "Quiz with ID %s not found", a.pb.Id)
 	}
 
 	return nil
 }
+
 func (a *QuizRepository) Create(ctx context.Context) error {
 	query := `
 		INSERT INTO quizzes (subject_class_id, topic_subject_id, name, description, end_date, updated_by)

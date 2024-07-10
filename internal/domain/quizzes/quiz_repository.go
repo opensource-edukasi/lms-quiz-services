@@ -393,6 +393,7 @@ func (a *QuizRepository) UpdateOption(ctx context.Context, option *quizPb.Option
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement update option")
 		return status.Errorf(codes.Internal, "Prepare statement update option: %v", err)
 	}
 	defer stmt.Close()
@@ -414,6 +415,7 @@ func (a *QuizRepository) UpdateOption(ctx context.Context, option *quizPb.Option
 		option.Id,
 	).Scan(&option.CreatedAt)
 	if err != nil {
+		a.Log.Println("Failed update option")
 		return status.Errorf(codes.Internal, "Exec update option: %v", err)
 	}
 

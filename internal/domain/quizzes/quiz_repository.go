@@ -524,12 +524,14 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 	`
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement GetQuestionByQuiz")
 		return status.Errorf(codes.Internal, "Prepare statement GetQuestionByQuizId: %v", err)
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, a.pb.Id)
 	if err != nil {
+		a.Log.Println("Failed to execute Query Context GetQuestionByQuizId ")
 		return status.Errorf(codes.Internal, "Query Context GetQuestionByQuizId: %v", err)
 	}
 
@@ -548,6 +550,7 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 			&options,
 		)
 		if err != nil {
+			a.Log.Println("Failed to scan GetQuestionByQuizId")
 			return status.Errorf(codes.Internal, "Scan GetQuestionByQuizId: %v", err)
 		}
 
@@ -561,6 +564,7 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 		}{}
 		err = json.Unmarshal([]byte(options), &optionStruct)
 		if err != nil {
+			a.Log.Println("Failed unmarshal option GetQuestionByQuizId")
 			return status.Errorf(codes.Internal, "unmarshal option GetQuestionByQuizId: %v", err)
 		}
 
@@ -579,6 +583,7 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 	}
 
 	if rows.Err() != nil {
+		a.Log.Println("Error occurred while iterating rows on  GetQuestionByQuizId")
 		return status.Errorf(codes.Internal, "rows error on  GetQuestionByQuizId: %v", err)
 	}
 

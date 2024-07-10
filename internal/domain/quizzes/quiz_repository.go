@@ -295,11 +295,13 @@ func (a *QuizRepository) deleteOptions(ctx context.Context, ids []string) error 
 	query := fmt.Sprintf("DELETE FROM options WHERE id IN (%s)", array.ConvertToWhereIn(1, ids))
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement deleteOptions")
 		return status.Errorf(codes.Internal, "Prepare statement deleteOptions: %v", err)
 	}
 	defer stmt.Close()
 	_, err = stmt.ExecContext(ctx, array.ConvertToAny(ids)...)
 	if err != nil {
+		a.Log.Println("Failed execute context deleteOptions")
 		return status.Errorf(codes.Internal, "exec context deleteOptions: %v", err)
 	}
 

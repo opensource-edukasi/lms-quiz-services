@@ -37,6 +37,7 @@ func (a *QuizRepository) Update(ctx context.Context) error {
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement update quiz: ", err)
 		return status.Errorf(codes.Internal, "Prepare statement update quiz: %v", err)
 	}
 	defer stmt.Close()
@@ -54,6 +55,7 @@ func (a *QuizRepository) Update(ctx context.Context) error {
 	).Scan(&a.pb.SubjectClassId, &a.pb.TopicSubjectId, &a.pb.CreatedAt)
 
 	if err != nil {
+		a.Log.Println("Error update quiz", err)
 		return status.Errorf(codes.Internal, "Exec update quiz: %v", err)
 	}
 
@@ -89,12 +91,14 @@ func (a *QuizRepository) deleteQuestions(ctx context.Context, ids []string) erro
 	query := fmt.Sprintf("DELETE FROM questions WHERE id IN (%s)", array.ConvertToWhereIn(1, ids))
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement deleteQuestions")
 		return status.Errorf(codes.Internal, "Prepare statement deleteQuestions: %v", err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, array.ConvertToAny(ids)...)
 	if err != nil {
+		a.Log.Println("Failed to execute context deleteQuestions")
 		return status.Errorf(codes.Internal, "exec context deleteQuestions: %v", err)
 	}
 
@@ -106,12 +110,14 @@ func (a *QuizRepository) getExtQuestions(ctx context.Context) ([]string, error) 
 	query := `SELECT id FROM questions WHERE quiz_id = $1`
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement getExtQuestions")
 		return ids, status.Errorf(codes.Internal, "Prepare statement getExtQuestions: %v", err)
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, a.pb.Id)
 	if err != nil {
+		a.Log.Println("Failed to execute Query Context getExtQuestions")
 		return ids, status.Errorf(codes.Internal, "Query Context getExtQuestions: %v", err)
 	}
 
@@ -119,12 +125,14 @@ func (a *QuizRepository) getExtQuestions(ctx context.Context) ([]string, error) 
 		var id string
 		err = rows.Scan(&id)
 		if err != nil {
+			a.Log.Println("Failed to scan row for quiz")
 			return ids, status.Errorf(codes.Internal, "Scan getExtQuestions: %v", err)
 		}
 		ids = append(ids, id)
 	}
 
 	if rows.Err() != nil {
+		a.Log.Println("Error occurred while iterating rows for quiz")
 		return ids, status.Errorf(codes.Internal, "Rows getExtQuestions: %v", err)
 	}
 
@@ -141,6 +149,7 @@ func (a *QuizRepository) InsertQuestion(ctx context.Context, question *quizPb.Qu
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement insert question")
 		return status.Errorf(codes.Internal, "Prepare statement insert question: %v", err)
 	}
 	defer stmt.Close()
@@ -167,6 +176,7 @@ func (a *QuizRepository) InsertQuestion(ctx context.Context, question *quizPb.Qu
 		question.UpdatedBy,
 	).Scan(&question.Id, &question.UpdatedAt, &question.CreatedAt)
 	if err != nil {
+		a.Log.Println("Failed execute insert question")
 		return status.Errorf(codes.Internal, "Exec insert question: %v", err)
 	}
 
@@ -196,6 +206,7 @@ func (a *QuizRepository) UpdateQuestion(ctx context.Context, question *quizPb.Qu
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement update question")
 		return status.Errorf(codes.Internal, "Prepare statement update question: %v", err)
 	}
 	defer stmt.Close()
@@ -226,6 +237,7 @@ func (a *QuizRepository) UpdateQuestion(ctx context.Context, question *quizPb.Qu
 		question.Id,
 	).Scan(&question.CreatedAt)
 	if err != nil {
+		a.Log.Println("Failed execute update question")
 		return status.Errorf(codes.Internal, "Exec update question: %v", err)
 	}
 
@@ -264,12 +276,14 @@ func (a *QuizRepository) DeleteQuestion(ctx context.Context, id string) error {
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement delete question")
 		return status.Errorf(codes.Internal, "Prepare statement delete question: %v", err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
+		a.Log.Println("Failed execute delete question")
 		return status.Errorf(codes.Internal, "Exec delete question: %v", err)
 	}
 
@@ -281,11 +295,13 @@ func (a *QuizRepository) deleteOptions(ctx context.Context, ids []string) error 
 	query := fmt.Sprintf("DELETE FROM options WHERE id IN (%s)", array.ConvertToWhereIn(1, ids))
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement deleteOptions")
 		return status.Errorf(codes.Internal, "Prepare statement deleteOptions: %v", err)
 	}
 	defer stmt.Close()
 	_, err = stmt.ExecContext(ctx, array.ConvertToAny(ids)...)
 	if err != nil {
+		a.Log.Println("Failed execute context deleteOptions")
 		return status.Errorf(codes.Internal, "exec context deleteOptions: %v", err)
 	}
 
@@ -297,12 +313,14 @@ func (a *QuizRepository) getExtOptions(ctx context.Context, questionId string) (
 	query := `SELECT id FROM options WHERE question_id = $1`
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement getExtOptions")
 		return ids, status.Errorf(codes.Internal, "Prepare statement getExtOptions: %v", err)
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, questionId)
 	if err != nil {
+		a.Log.Println("Failed Query Context getExtOptions")
 		return ids, status.Errorf(codes.Internal, "Query Context getExtOptions: %v", err)
 	}
 
@@ -310,12 +328,14 @@ func (a *QuizRepository) getExtOptions(ctx context.Context, questionId string) (
 		var id string
 		err = rows.Scan(&id)
 		if err != nil {
+			a.Log.Println("Failed to Scan rows getExtOptions")
 			return ids, status.Errorf(codes.Internal, "Scan getExtOptions: %v", err)
 		}
 		ids = append(ids, id)
 	}
 
 	if rows.Err() != nil {
+		a.Log.Println("Error occurred while iterating rows for getExtOptions")
 		return ids, status.Errorf(codes.Internal, "Rows getExtOptions: %v", err)
 	}
 
@@ -332,6 +352,7 @@ func (a *QuizRepository) InsertOption(ctx context.Context, option *quizPb.Option
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement insert option")
 		return status.Errorf(codes.Internal, "Prepare statement insert option: %v", err)
 	}
 	defer stmt.Close()
@@ -350,6 +371,7 @@ func (a *QuizRepository) InsertOption(ctx context.Context, option *quizPb.Option
 		option.UpdatedBy,
 	).Scan(&option.Id, &option.UpdatedAt, &option.CreatedAt)
 	if err != nil {
+		a.Log.Println("Failed execute insert option")
 		return status.Errorf(codes.Internal, "Exec insert option: %v", err)
 	}
 
@@ -371,6 +393,7 @@ func (a *QuizRepository) UpdateOption(ctx context.Context, option *quizPb.Option
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement update option")
 		return status.Errorf(codes.Internal, "Prepare statement update option: %v", err)
 	}
 	defer stmt.Close()
@@ -392,6 +415,7 @@ func (a *QuizRepository) UpdateOption(ctx context.Context, option *quizPb.Option
 		option.Id,
 	).Scan(&option.CreatedAt)
 	if err != nil {
+		a.Log.Println("Failed update option")
 		return status.Errorf(codes.Internal, "Exec update option: %v", err)
 	}
 
@@ -405,12 +429,14 @@ func (a *QuizRepository) DeleteOption(ctx context.Context, id string) error {
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement delete option")
 		return status.Errorf(codes.Internal, "Prepare statement delete option: %v", err)
 	}
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
+		a.Log.Println("Failed execute delete option")
 		return status.Errorf(codes.Internal, "Exec delete option: %v", err)
 	}
 
@@ -425,6 +451,7 @@ func (a *QuizRepository) FindQuizById(ctx context.Context) error {
 	`
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement FindQuizzById: ", err)
 		return status.Errorf(codes.Internal, "Prepare statement FindQuizById: %v", err)
 	}
 	defer stmt.Close()
@@ -441,6 +468,7 @@ func (a *QuizRepository) FindQuizById(ctx context.Context) error {
 		&a.pb.CreatedAt,
 	)
 	if err != nil {
+		a.Log.Println("Error selecting FindQuizzById", err)
 		return status.Errorf(codes.Internal, "Query Row Context FindQuizById: %v", err)
 	}
 
@@ -469,6 +497,7 @@ func (a *QuizRepository) GetQuizAnswer(ctx context.Context) error {
 
 	stmt, err := a.db.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement GetQuizAnswer: ", err)
 		return status.Errorf(codes.Internal, "Prepare statement: %v", err)
 	}
 	defer stmt.Close()
@@ -476,6 +505,7 @@ func (a *QuizRepository) GetQuizAnswer(ctx context.Context) error {
 	var jsonStr string
 	err = stmt.QueryRowContext(ctx, a.pbAnswer.Quiz.Id, a.pbAnswer.StudentId).Scan(&a.pbAnswer.Id, &a.pbAnswer.Score, &jsonStr)
 	if err != nil {
+		a.Log.Println("Error selecting GetQuizAnswer", err)
 		return status.Errorf(codes.Internal, "Query Row Context: %v", err)
 	}
 
@@ -518,12 +548,14 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 	`
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement GetQuestionByQuiz")
 		return status.Errorf(codes.Internal, "Prepare statement GetQuestionByQuizId: %v", err)
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, a.pb.Id)
 	if err != nil {
+		a.Log.Println("Failed to execute Query Context GetQuestionByQuizId ")
 		return status.Errorf(codes.Internal, "Query Context GetQuestionByQuizId: %v", err)
 	}
 
@@ -543,6 +575,7 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 			&options,
 		)
 		if err != nil {
+			a.Log.Println("Failed to scan GetQuestionByQuizId")
 			return status.Errorf(codes.Internal, "Scan GetQuestionByQuizId: %v", err)
 		}
 
@@ -560,6 +593,7 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 		}{}
 		err = json.Unmarshal([]byte(options), &optionStruct)
 		if err != nil {
+			a.Log.Println("Failed unmarshal option GetQuestionByQuizId")
 			return status.Errorf(codes.Internal, "unmarshal option GetQuestionByQuizId: %v", err)
 		}
 
@@ -582,7 +616,8 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 	}
 
 	if rows.Err() != nil {
-		return status.Errorf(codes.Internal, "rows error on GetQuestionByQuizId: %v", rows.Err())
+		a.Log.Println("Error occurred while iterating rows on GetQuestionByQuizzId")
+		return status.Errorf(codes.Internal, "rows error on  GetQuestionByQuizId: %v", err)
 	}
 
 	return nil
@@ -615,6 +650,7 @@ func (a *QuizRepository) Answer(ctx context.Context) error {
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement create answer quiz: ", err)
 		return status.Errorf(codes.Internal, "Prepare statement answer quiz: %v", err)
 	}
 	defer stmt.Close()
@@ -626,6 +662,7 @@ func (a *QuizRepository) Answer(ctx context.Context) error {
 	).Scan(&a.pbAnswer.Id, &a.pbAnswer.CreatedAt)
 
 	if err != nil {
+		a.Log.Println("Error inserting answer quiz ", err)
 		return status.Errorf(codes.Internal, "Exec answer quiz: %v", err)
 	}
 
@@ -647,6 +684,7 @@ func (a *QuizRepository) InsertQuestionAnswer(ctx context.Context, questionAnswe
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement InsertQuestionAnswer")
 		return status.Errorf(codes.Internal, "Prepare statement InsertQuestionAnswer : %v", err)
 	}
 	defer stmt.Close()
@@ -659,6 +697,7 @@ func (a *QuizRepository) InsertQuestionAnswer(ctx context.Context, questionAnswe
 	).Scan(&a.pbAnswer.CreatedAt)
 
 	if err != nil {
+		a.Log.Println("Failed execute answer quiz")
 		return status.Errorf(codes.Internal, "Exec answer quiz: %v", err)
 	}
 
@@ -671,26 +710,31 @@ func (a *QuizRepository) Delete(ctx context.Context) error {
 
 	stmt, err := a.db.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement delete quizzes")
 		return status.Errorf(codes.Internal, "Prepare statement delete quizzes: %v", err)
 	}
 	defer stmt.Close()
 
 	result, err := stmt.ExecContext(ctx, a.pb.Id)
 	if err != nil {
+		a.Log.Println("Error delete quizzes", err)
 		return status.Errorf(codes.Internal, "Exec delete quizzes: %v", err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
+		a.Log.Println("Error getting rows for quiz")
 		return status.Errorf(codes.Internal, "Error getting rows affected: %v", err)
 	}
 
 	if rowsAffected == 0 {
+		a.Log.Printf("Quiz with ID %s not found", a.pb.Id)
 		return status.Errorf(codes.NotFound, "Quiz with ID %s not found", a.pb.Id)
 	}
 
 	return nil
 }
+
 func (a *QuizRepository) Create(ctx context.Context) error {
 	query := `
 		INSERT INTO quizzes (subject_class_id, topic_subject_id, name, description, end_date, updated_by)

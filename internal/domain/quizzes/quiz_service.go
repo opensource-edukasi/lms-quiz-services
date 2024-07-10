@@ -39,6 +39,7 @@ func (a *QuizService) Get(ctx context.Context, in *quizPb.Id) (*quizPb.Quiz, err
 
 	quizRepo.tx, err = a.Db.BeginTx(ctx, nil)
 	if err != nil {
+		a.Log.Println("Error beginning DB Transaction: ", err)
 		return nil, err
 	}
 
@@ -55,6 +56,7 @@ func (a *QuizService) Update(ctx context.Context, in *quizPb.QuizUpdateInput) (*
 	var err error
 	quizRepo.tx, err = a.Db.BeginTx(ctx, nil)
 	if err != nil {
+		a.Log.Println("Error beginning DB Transaction: ", err)
 		return &quizRepo.pb, err
 	}
 
@@ -125,6 +127,7 @@ func (a *QuizService) Answer(ctx context.Context, in *quizPb.QuizAnswerInput) (*
 
 	quizRepo.tx, err = a.Db.BeginTx(ctx, nil)
 	if err != nil {
+		a.Log.Println("Error beginning DB Transaction: ", err)
 		return &quizRepo.pbAnswer, err
 	}
 

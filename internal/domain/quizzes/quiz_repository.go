@@ -352,6 +352,7 @@ func (a *QuizRepository) InsertOption(ctx context.Context, option *quizPb.Option
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement insert option")
 		return status.Errorf(codes.Internal, "Prepare statement insert option: %v", err)
 	}
 	defer stmt.Close()
@@ -370,6 +371,7 @@ func (a *QuizRepository) InsertOption(ctx context.Context, option *quizPb.Option
 		option.UpdatedBy,
 	).Scan(&option.Id, &option.UpdatedAt, &option.CreatedAt)
 	if err != nil {
+		a.Log.Println("Failed execute insert option")
 		return status.Errorf(codes.Internal, "Exec insert option: %v", err)
 	}
 

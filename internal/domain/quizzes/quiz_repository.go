@@ -149,6 +149,7 @@ func (a *QuizRepository) InsertQuestion(ctx context.Context, question *quizPb.Qu
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement insert question")
 		return status.Errorf(codes.Internal, "Prepare statement insert question: %v", err)
 	}
 	defer stmt.Close()
@@ -175,6 +176,7 @@ func (a *QuizRepository) InsertQuestion(ctx context.Context, question *quizPb.Qu
 		question.UpdatedBy,
 	).Scan(&question.Id, &question.UpdatedAt, &question.CreatedAt)
 	if err != nil {
+		a.Log.Println("Failed execute insert question")
 		return status.Errorf(codes.Internal, "Exec insert question: %v", err)
 	}
 

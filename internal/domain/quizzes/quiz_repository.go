@@ -313,12 +313,14 @@ func (a *QuizRepository) getExtOptions(ctx context.Context, questionId string) (
 	query := `SELECT id FROM options WHERE question_id = $1`
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement getExtOptions")
 		return ids, status.Errorf(codes.Internal, "Prepare statement getExtOptions: %v", err)
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, questionId)
 	if err != nil {
+		a.Log.Println("Failed Query Context getExtOptions")
 		return ids, status.Errorf(codes.Internal, "Query Context getExtOptions: %v", err)
 	}
 
@@ -326,12 +328,14 @@ func (a *QuizRepository) getExtOptions(ctx context.Context, questionId string) (
 		var id string
 		err = rows.Scan(&id)
 		if err != nil {
+			a.Log.Println("Failed to Scan rows getExtOptions")
 			return ids, status.Errorf(codes.Internal, "Scan getExtOptions: %v", err)
 		}
 		ids = append(ids, id)
 	}
 
 	if rows.Err() != nil {
+		a.Log.Println("Error occurred while iterating rows for getExtOptions")
 		return ids, status.Errorf(codes.Internal, "Rows getExtOptions: %v", err)
 	}
 

@@ -206,6 +206,7 @@ func (a *QuizRepository) UpdateQuestion(ctx context.Context, question *quizPb.Qu
 
 	stmt, err := a.tx.PrepareContext(ctx, query)
 	if err != nil {
+		a.Log.Println("Prepare statement update question")
 		return status.Errorf(codes.Internal, "Prepare statement update question: %v", err)
 	}
 	defer stmt.Close()
@@ -236,6 +237,7 @@ func (a *QuizRepository) UpdateQuestion(ctx context.Context, question *quizPb.Qu
 		question.Id,
 	).Scan(&question.CreatedAt)
 	if err != nil {
+		a.Log.Println("Failed execute update question")
 		return status.Errorf(codes.Internal, "Exec update question: %v", err)
 	}
 

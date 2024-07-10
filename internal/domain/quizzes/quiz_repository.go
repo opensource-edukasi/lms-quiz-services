@@ -616,6 +616,7 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 	}
 
 	if rows.Err() != nil {
+		a.Log.Println("Error occurred while iterating rows on GetQuestionByQuizzId")
 		return status.Errorf(codes.Internal, "rows error on  GetQuestionByQuizId: %v", err)
 	}
 

@@ -624,20 +624,26 @@ func (a *QuizRepository) GetQuestionByQuizId(ctx context.Context) error {
 }
 
 func (a *QuizRepository) CalculateScore() {
-	score := 0
+	correctCount := 0
+	totalQuestions := len(a.pb.Question)
+
 	for _, question := range a.pb.Question {
 		for _, answer := range a.pbAnswer.QuestionAnswer {
 			if question.Id == answer.Question.Id {
 				answer.Question = question
 				if question.AnswerId == answer.AnswerId {
-					score += 1
+					correctCount += 1
 					answer.IsCorrect = true
 				}
 			}
 		}
 	}
 
-	a.pbAnswer.Score = int32(score)
+	if totalQuestions > 0 {
+		a.pbAnswer.Score = int32((correctCount * 100) / totalQuestions)
+	} else {
+		a.pbAnswer.Score = 0
+	}
 	return
 }
 
@@ -702,6 +708,46 @@ func (a *QuizRepository) InsertQuestionAnswer(ctx context.Context, questionAnswe
 	}
 
 	return nil
+}
+
+func (a *QuizRepository) ListScoresByQuizId(ctx context.Context, quizId string) (*quizPb.QuizScoreList, error) {
+	query := `
+		SELECT id, student_id, score, created_at
+		FROM student_quizzes
+		WHERE quiz_id = $1
+	`
+
+	stmt, err := a.db.PrepareContext(ctx, query)
+	if err != nil {
+		a.Log.Println("Prepare statement ListScoresByQuizId: ", err)
+		return nil, status.Errorf(codes.Internal, "Prepare statement ListScoresByQuizId: %v", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, quizId)
+	if err != nil {
+		a.Log.Println("Failed to execute Query Context ListScoresByQuizId")
+		return nil, status.Errorf(codes.Internal, "Query Context ListScoresByQuizId: %v", err)
+	}
+	defer rows.Close()
+
+	var scores []*quizPb.QuizScore
+	for rows.Next() {
+		var score quizPb.QuizScore
+		err = rows.Scan(&score.StudentQuizId, &score.StudentId, &score.Score, &score.CreatedAt)
+		if err != nil {
+			a.Log.Println("Failed to scan ListScoresByQuizId")
+			return nil, status.Errorf(codes.Internal, "Scan ListScoresByQuizId: %v", err)
+		}
+		scores = append(scores, &score)
+	}
+
+	if rows.Err() != nil {
+		a.Log.Println("Error occurred while iterating rows ListScoresByQuizId")
+		return nil, status.Errorf(codes.Internal, "Rows ListScoresByQuizId: %v", rows.Err())
+	}
+
+	return &quizPb.QuizScoreList{Scores: scores}, nil
 }
 
 func (a *QuizRepository) Delete(ctx context.Context) error {

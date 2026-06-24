@@ -3,15 +3,19 @@ package quizzes
 import (
 	"context"
 	"database/sql"
+	"lms-quiz-services/internal/pkg/app"
 	"lms-quiz-services/internal/pkg/db/redis"
 	quizPb "lms-quiz-services/pb/quizzes"
 	"log"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type QuizService struct {
 	Db    *sql.DB
 	Cache *redis.Cache
-	Log	 	*log.Logger
+	Log   *log.Logger
 }
 
 func (a *QuizService) GetResultQuiz(ctx context.Context, in *quizPb.GetResultQuizInput) (*quizPb.QuizAnswer, error) {
@@ -51,6 +55,18 @@ func (a *QuizService) Get(ctx context.Context, in *quizPb.Id) (*quizPb.Quiz, err
 	return &quizRepo.pb, nil
 }
 
+func (a *QuizService) ListScoresByQuizId(ctx context.Context, in *quizPb.Id) (*quizPb.QuizScoreList, error) {
+	if len(in.Id) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "quiz id is required")
+	}
+
+	var quizRepo QuizRepository
+	quizRepo.db = a.Db
+	quizRepo.Log = a.Log
+
+	return quizRepo.ListScoresByQuizId(ctx, in.Id)
+}
+
 func (a *QuizService) Update(ctx context.Context, in *quizPb.QuizUpdateInput) (*quizPb.Quiz, error) {
 	var quizRepo QuizRepository
 	var err error
@@ -60,7 +76,16 @@ func (a *QuizService) Update(ctx context.Context, in *quizPb.QuizUpdateInput) (*
 		return &quizRepo.pb, err
 	}
 
-	// TODO: validate quizInput
+	// Validate quiz input
+	if len(in.Id) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "id is required")
+	}
+	if len(in.Name) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "name is required")
+	}
+	if len(in.Description) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "description is required")
+	}
 
 	quizRepo.pb = quizPb.Quiz{
 		Id:          in.Id,
@@ -70,7 +95,14 @@ func (a *QuizService) Update(ctx context.Context, in *quizPb.QuizUpdateInput) (*
 	}
 
 	for _, questionInput := range in.Question {
-		// TODO: validate questionInput
+		// Validate question input
+		if len(questionInput.Title) == 0 {
+			return nil, status.Errorf(codes.InvalidArgument, "question title is required")
+		}
+		if len(questionInput.Option) < 2 {
+			return nil, status.Errorf(codes.InvalidArgument, "each question must have at least 2 options")
+		}
+
 		question := &quizPb.Question{
 			Id:          questionInput.Id,
 			Title:       questionInput.Title,
@@ -80,7 +112,10 @@ func (a *QuizService) Update(ctx context.Context, in *quizPb.QuizUpdateInput) (*
 		}
 
 		for _, opt := range questionInput.Option {
-			// TODO: validate optionInput
+			// Validate option input
+			if len(opt.Description) == 0 {
+				return nil, status.Errorf(codes.InvalidArgument, "option description is required")
+			}
 			question.Option = append(question.Option, &quizPb.Option{
 				Id:          opt.Id,
 				Description: opt.Description,
@@ -106,15 +141,24 @@ func (a *QuizService) Answer(ctx context.Context, in *quizPb.QuizAnswerInput) (*
 	var quizRepo QuizRepository
 	var err error
 
-	// TODO: validasi apakah user yang login mengambil kelas pada quiz ini
+	// Validate quiz answer input
+	if len(in.QuizId) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "quiz_id is required")
+	}
 
-	// TODO: validate quizAnswerInput
 	quizRepo.pbAnswer = quizPb.QuizAnswer{
 		Quiz: &quizPb.Quiz{Id: in.QuizId},
 	}
 
 	for _, questionAnswerInput := range in.QuestionAnswer {
-		// TODO: validate questionAnswerInput
+		// Validate question answer input
+		if len(questionAnswerInput.QuestionId) == 0 {
+			return nil, status.Errorf(codes.InvalidArgument, "question_id is required")
+		}
+		if len(questionAnswerInput.AnswerId) == 0 {
+			return nil, status.Errorf(codes.InvalidArgument, "answer_id is required")
+		}
+
 		questionAnswer := &quizPb.QuestionAnswer{
 			Question: &quizPb.Question{Id: questionAnswerInput.QuestionId},
 			AnswerId: questionAnswerInput.AnswerId,
@@ -175,32 +219,57 @@ func (a *QuizService) Create(ctx context.Context, in *quizPb.QuizCreateInput) (*
 		return &quizRepo.pb, err
 	}
 
-	// TODO: validate quizInput
-	
+	// Validate quiz input
+	if len(in.SubjectClassId) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "subject_class_id is required")
+	}
+	if len(in.TopicSubjectId) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "topic_subject_id is required")
+	}
+	if len(in.Name) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "name is required")
+	}
+	if len(in.Description) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "description is required")
+	}
+	if len(in.EndDate) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "end_date is required")
+	}
+
 	quizRepo.pb = quizPb.Quiz{
-		Description: in.Description,
-		Name:        in.Name,
+		Description:    in.Description,
+		Name:           in.Name,
 		SubjectClassId: in.SubjectClassId,
 		TopicSubjectId: in.TopicSubjectId,
-		EndDate:     in.EndDate,
+		EndDate:        in.EndDate,
 	}
-	
+
 	for _, questionInput := range in.Question {
-		// TODO: validate questionInput
+		// Validate question input
+		if len(questionInput.Title) == 0 {
+			return nil, status.Errorf(codes.InvalidArgument, "question title is required")
+		}
+		if len(questionInput.Option) < 2 {
+			return nil, status.Errorf(codes.InvalidArgument, "each question must have at least 2 options")
+		}
+
 		question := &quizPb.Question{
 			Title:       questionInput.Title,
 			Description: questionInput.Description,
 			StorageId:   questionInput.StorageId,
 		}
-	
+
 		for _, opt := range questionInput.Option {
-			// TODO: validate optionInput
+			// Validate option input
+			if len(opt.Description) == 0 {
+				return nil, status.Errorf(codes.InvalidArgument, "option description is required")
+			}
 			question.Option = append(question.Option, &quizPb.Option{
 				Description: opt.Description,
 				StorageId:   opt.StorageId,
 			})
 		}
-	
+
 		quizRepo.pb.Question = append(quizRepo.pb.Question, question)
 	}
 
@@ -211,6 +280,13 @@ func (a *QuizService) Create(ctx context.Context, in *quizPb.QuizCreateInput) (*
 	}
 
 	quizRepo.tx.Commit()
+
+	// Call post service to create a post with type QUIZ
+	go func() {
+		postClient := &postServiceClient{Log: a.Log}
+		userID := ctx.Value(app.Ctx("user_id")).(string)
+		postClient.createPost(ctx, in.SubjectClassId, in.TopicSubjectId, quizRepo.pb.Id, in.Name, userID)
+	}()
 
 	return &quizRepo.pb, nil
 }

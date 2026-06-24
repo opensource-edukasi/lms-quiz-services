@@ -31,3 +31,14 @@ message GetResultQuizInput {
   string quiz_id = 1;
   string student_id = 2;
 }
+
+message QuizScore {
+  string student_quiz_id = 1;
+  string student_id = 2;
+  int32 score = 3;
+  string created_at = 4;
+}
+
+message QuizScoreList {
+  repeated QuizScore scores = 1;
+}

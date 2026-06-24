@@ -14,4 +14,5 @@ service Quizzes {
   rpc GetResultQuiz(GetResultQuizInput) returns (QuizAnswer) {}
   rpc Delete(Id) returns (BoolMessage){}
   rpc Create(QuizCreateInput) returns (Quiz) {}
+  rpc ListScoresByQuizId(Id) returns (QuizScoreList) {}
 }
